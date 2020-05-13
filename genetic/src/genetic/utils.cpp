@@ -1,4 +1,5 @@
 #include "genetic/utils.h"
+#include <stdexcept>
 std::random_device rd;
 std::mt19937 generator(rd());
 
@@ -40,11 +41,11 @@ double calculator::criterion(std::vector<std::size_t>* permutation) {
 			return result * 2;
 		}
 		else {
-			throw std::exception("The permutation length is greater than the dimension of the matrix (or size of data_volume not equal to size of transfer_cost)");
+			throw std::runtime_error("The permutation length is greater than the dimension of the matrix (or size of data_volume not equal to size of transfer_cost)");
 		}
 	}
 	else {
-		throw std::exception("Not all fields are initialized");
+		throw std::runtime_error("Not all fields are initialized");
 	}
 }
 
