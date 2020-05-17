@@ -77,7 +77,7 @@ void sequential_executor::find_unpromising() {
 			auto lower_b = lower_bound->get_bound(&my_graph->get_current_node()->get_value());
 			if (lower_b.second >= minimal_upper_bound) {
 				bool equal = true;
-				auto value = my_graph->get_current_node()->get_value();
+				auto& value = my_graph->get_current_node()->get_value();
 				std::size_t value_size = value.determined_size();
 				std::size_t distance = std::min(value_size, my_position_value_size);
 				for (std::size_t elem_idx = 0; elem_idx < distance; ++elem_idx) {
@@ -121,11 +121,11 @@ void sequential_executor::multithreading_brute() {
 		std::copy(unused.begin(), unused.end(), std::back_inserter(per));
 		std::sort(per.begin() + per_size, per.end());
 		permutation per_c = permutation(per);
-		double my_crit = tmp_calc->criterion(&per_c);
+		std::size_t my_crit = tmp_calc->criterion(&per_c);
 		permutation internal_solution = per;
 		do {
 			per_c = permutation(per);
-			double tmp_crit = tmp_calc->criterion(&per_c);
+			std::size_t tmp_crit = tmp_calc->criterion(&per_c);
 			if (tmp_crit < my_crit) {
 				my_crit = tmp_crit;
 				internal_solution = per;
@@ -144,12 +144,12 @@ void sequential_executor::multithreading_brute() {
 		thread_pool[idx].join();
 	}
 	auto internal_better_it = std::min_element(shared.begin(), shared.end(), [tmp_calc](permutation& first, permutation& second) {
-		double first_estim = tmp_calc->criterion(&first);
-		double second_estim = tmp_calc->criterion(&second);
+		std::size_t first_estim = tmp_calc->criterion(&first);
+		std::size_t second_estim = tmp_calc->criterion(&second);
 		return first_estim < second_estim;
 	});
-	double current_better = calc->criterion(better_permutation);
-	double internal_better_estim = tmp_calc->criterion(&(*internal_better_it));
+	std::size_t current_better = calc->criterion(better_permutation);
+	std::size_t internal_better_estim = tmp_calc->criterion(&(*internal_better_it));
 	if (current_better > internal_better_estim) {
 		delete better_permutation;
 		better_permutation = new permutation(*internal_better_it);
@@ -165,6 +165,7 @@ void sequential_executor::recursive_find()
 		permutation current = my_graph->get_current_node()->get_value();
 		auto lower = lower_bound->get_bound(&current);
 		auto upper = upper_bound->get_bound(&current);
+		std::size_t crit = calc->criterion(&current);
 		if (my_graph->count_of_nodes()) {
 			if (lower.second == upper.second) {
 				printf("Find global on level = %u\n", my_graph->get_current_node()->get_level());
@@ -178,7 +179,7 @@ void sequential_executor::recursive_find()
 			}
 		}
 		else {
-			double current_better = calc->criterion(better_permutation);
+			std::size_t current_better = calc->criterion(better_permutation);
 			if (current_better > upper.second) {
 				delete better_permutation;
 				better_permutation = new permutation(current);
@@ -221,6 +222,9 @@ void sequential_executor::recursive_find()
 		my_graph->set_next_nodes(next_n);
 		delete next_p;
 		recursive_find();
+		if (global_solution) { // crutch
+			return;
+		}
 		my_graph->destroy_by_index(idx);
 	}
 	my_graph->back();
@@ -245,5 +249,5 @@ solution sequential_executor::get_solution() {
 
 	return result;
 
-	//return {*new permutation(this->size()), static_cast<double>(0)};
+	//return {*new permutation(this->size()), static_cast<std::size_t>(0)};
 }

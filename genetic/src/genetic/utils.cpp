@@ -2,7 +2,7 @@
 #include <stdexcept>
 std::random_device rd;
 std::mt19937 generator(rd());
-
+std::uniform_int_distribution<std::size_t> range(0, 10000);
 
 namespace std {
 
@@ -23,8 +23,8 @@ std::set<std::size_t> get_unused(std::vector<std::size_t> items, std::size_t max
 
 std::size_t
 random(int last, int start) {
-	std::uniform_int_distribution<std::size_t> range(start, last - 1);
-	return range(generator);
+	//std::uniform_int_distribution<std::size_t> range(start, last - 1);
+	return start + range(generator) % (last - start);
 }
 
 calculator::calculator(Matrix* data, Matrix* cost) : data_volume(data), transfer_cost(cost) {}

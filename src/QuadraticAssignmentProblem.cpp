@@ -22,8 +22,10 @@ int main(int argc, char* argv[])
 {
 	//{
 	//	std::cout << "Started." << std::endl;
-	//	utils::FileHandler<std::size_t> handler_tasks("tasks.txt");
-	//	utils::FileHandler<std::size_t> handler_nodes("nodes.txt");
+	//	utils::FileHandler<std::size_t> handler_tasks("chr12a_tasks.txt");
+	//	utils::FileHandler<std::size_t> handler_nodes("chr12a_nodes.txt");
+	//	//utils::FileHandler<std::size_t> handler_tasks("tasks.txt");
+	//	//utils::FileHandler<std::size_t> handler_nodes("nodes.txt");
 
 	//	executors exec = seq_executor;
 	//	lower_bounds lower = greedy_incorrect;

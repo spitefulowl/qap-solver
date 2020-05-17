@@ -17,15 +17,15 @@ base_bound::~base_bound() {
 
 degenerate_lower_bound::degenerate_lower_bound(Matrix* data, Matrix* cost) : base_bound(data, cost) {}
 
-std::pair<permutation*, double> degenerate_lower_bound::get_bound(permutation* base_permutation) {
-	return std::make_pair(new permutation(*base_permutation), static_cast<double>(1));
+std::pair<permutation*, std::size_t> degenerate_lower_bound::get_bound(permutation* base_permutation) {
+	return std::make_pair(new permutation(*base_permutation), static_cast<std::size_t>(1));
 }
 
 // upper_bound section
 
 random_upper_bound::random_upper_bound(Matrix* data, Matrix* cost) : base_bound(data, cost) {}
 
-std::pair<permutation*, double> random_upper_bound::get_bound(permutation* base_permutation) {
+std::pair<permutation*, std::size_t> random_upper_bound::get_bound(permutation* base_permutation) {
 	if (base_permutation->size() == base_permutation->determined_size()) {
 		return std::make_pair(new permutation(*base_permutation), calc->criterion(base_permutation));
 	}
@@ -46,35 +46,53 @@ greedy_incorrect_lower_bound::greedy_incorrect_lower_bound(Matrix* data, Matrix*
 				ordered_cost.push_back((*cost)[row][column]);
 			}
 		}
-		std::sort(ordered_cost.begin(), ordered_cost.end());
+		std::sort(ordered_cost.begin(), ordered_cost.end(), std::greater<std::size_t>{});
 	}
 }
 
-std::pair<permutation*, double> greedy_incorrect_lower_bound::get_bound(permutation* base_permutation) { // TODO: can be simplified
+std::pair<permutation*, std::size_t> greedy_incorrect_lower_bound::get_bound(permutation* base_permutation) {
 	if (base_permutation->size() == base_permutation->determined_size()) {
 		return std::make_pair(new permutation(*base_permutation), calc->criterion(base_permutation));
 	}
-	double result_criterion = calc->criterion(base_permutation);
+	std::size_t result_criterion = calc->criterion(base_permutation);
 
 	std::vector<std::size_t> unfinished_data;
-	std::vector<std::size_t> unfinished_cost;
 
 	for (std::size_t idx = base_permutation->determined_size(); idx < base_permutation->size(); ++idx) {
-		for (std::size_t column = 0; column < data_volume->size(); ++column) {
+		for (std::size_t column = idx; column < data_volume->size(); ++column) {
 			if ((*data_volume)[idx][column]) {
 				unfinished_data.push_back((*data_volume)[idx][column]);
 			}
 		}
 	}
-	std::sort(unfinished_data.begin(), unfinished_data.end());
 
-	std::copy(ordered_cost.begin(), ordered_cost.begin() + unfinished_data.size(), std::back_inserter(unfinished_cost));
-	std::reverse(unfinished_cost.begin(), unfinished_cost.end());
+	for (std::size_t idx = base_permutation->determined_size(); idx < base_permutation->size(); ++idx) {
+		for (std::size_t column = 0; column < base_permutation->determined_size(); ++column) {
+			if ((*data_volume)[idx][column]) {
+				unfinished_data.push_back((*data_volume)[idx][column]);
+			}
+		}
+	}
+
+	std::sort(unfinished_data.begin(), unfinished_data.end());
+	std::size_t begin_idx = ordered_cost.size() - unfinished_data.size();
+
+	//std::vector<std::size_t> products;
+	//products.reserve(unfinished_data.size());
 
 	for (std::size_t idx = 0; idx < unfinished_data.size(); ++idx) {
-		result_criterion += unfinished_data[idx] * unfinished_cost[idx];
+		//products.push_back(unfinished_data[idx] * ordered_cost[begin_idx + idx]);
+		result_criterion += unfinished_data[idx] * ordered_cost[begin_idx + idx] * 2;
 	}
-	return std::pair<permutation*, double>(nullptr, result_criterion);
+	//std::sort(products.begin(), products.end());
+	//com_count /= 8;
+	//for (std::size_t idx = 0; idx < com_count; ++idx) {
+	//	result_criterion += products[idx] * 2;
+	//}
+	//for (std::size_t idx = com_count; idx < products.size(); ++idx) {
+	//	result_criterion += products[idx];
+	//}
+	return std::pair<permutation*, std::size_t>(nullptr, result_criterion);
 }
 
 genetic_upper_bound::genetic_upper_bound(Matrix* data, Matrix* cost) : base_bound(data, cost) {
@@ -89,7 +107,7 @@ genetic_upper_bound::~genetic_upper_bound() {
 	delete alg;
 }
 
-std::pair<permutation*, double> genetic_upper_bound::get_bound(permutation* base_permutation) {
+std::pair<permutation*, std::size_t> genetic_upper_bound::get_bound(permutation* base_permutation) {
 	std::vector<std::size_t>& extracted = base_permutation->extract();
 	std::vector<std::size_t> result = alg->execute(extracted, base_permutation->size());
 	permutation* result_permutation = new permutation(result);
