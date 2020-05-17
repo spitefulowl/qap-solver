@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <stdexcept>
 
-permutation::permutation(std::size_t size) : my_size(size) {}
+permutation::permutation(std::size_t size) : my_size(size) {
+	//my_permutation.reserve(size);
+}
 
 permutation::permutation(const permutation& copy)
 {

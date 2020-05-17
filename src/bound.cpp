@@ -96,11 +96,16 @@ std::pair<permutation*, std::size_t> greedy_incorrect_lower_bound::get_bound(per
 }
 
 genetic_upper_bound::genetic_upper_bound(Matrix* data, Matrix* cost) : base_bound(data, cost) {
-	std::size_t probability = 71;
-	std::size_t beta = 7;
-	std::size_t iterations = 10;
-	std::size_t population = 10;
-	alg = new genetic::GenAlg(new genetic::RandomGeneration, new genetic::OrdinalCrossover, new genetic::PointMutation, new genetic::BetaTournament, data, cost, iterations, population, probability, beta);
+	//std::size_t probability = 71;
+	//std::size_t beta = 7;
+	//std::size_t iterations = 10;
+	//std::size_t population = 10;
+	std::size_t probability = 81;
+	std::size_t beta = 12;
+	std::size_t iterations = 15;
+	std::size_t population = 20;
+	//alg = new genetic::GenAlg(new genetic::RandomGeneration, new genetic::OrdinalCrossover, new genetic::PointMutation, new genetic::BetaTournament, data, cost, iterations, population, probability, beta);
+	alg = new genetic::GenAlg(new genetic::RandomGeneration, new genetic::PartialCrossover, new genetic::InversionMutation, new genetic::BetaTournament, data, cost, iterations, population, probability, beta);
 }
 
 genetic_upper_bound::~genetic_upper_bound() {

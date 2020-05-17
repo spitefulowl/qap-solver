@@ -31,7 +31,7 @@ private:
 
 class sequential_executor : public base_executor {
 public:
-	sequential_executor(Matrix* data, Matrix* cost, base_bound* lower, base_bound* upper, bool concurrency);
+	sequential_executor(Matrix* data, Matrix* cost, base_bound* lower, base_bound* upper, bool concurrency, bool is_approximate = false);
 	~sequential_executor();
 	solution get_solution();
 private:
@@ -42,4 +42,5 @@ private:
 private:
 	std::uint32_t concurrency;
 	bool enable_concurrency;
+	bool is_approximate;
 };

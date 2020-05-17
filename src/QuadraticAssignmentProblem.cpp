@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 
 	//	QAP qap(&matrix_tasks, &matrix_nodes);
 	//	auto start = std::chrono::high_resolution_clock::now();
-	//	auto result = qap.get_solution(exec, lower, upper, concurrent);
+	//	auto result = qap.get_solution(exec, lower, upper, concurrent, true);
 	//	auto end = std::chrono::high_resolution_clock::now();
 
 	//	std::cout << "Result = " << result.second << std::endl;
@@ -65,6 +65,7 @@ int main(int argc, char* argv[])
 		lower_bounds lower = degenerate;
 		upper_bounds upper = random_bound;
 		bool concurrent = false;
+		bool is_approximate = false;
 		//
 		if (!strcmp(argv[3], "seq")) {
 			exec = seq_executor;
@@ -89,6 +90,12 @@ int main(int argc, char* argv[])
 				concurrent = true;
 			}
 		}
+		if (argc > 7) {
+			if (!strcmp(argv[7], "approximate")) {
+				is_approximate = true;
+				printf("true\n");
+			}
+		}
 
 		auto matrix_tasks = handler_tasks.GetMatrix();
 		auto matrix_nodes = handler_nodes.GetMatrix();
@@ -96,7 +103,7 @@ int main(int argc, char* argv[])
 
 		QAP qap(&matrix_tasks, &matrix_nodes);
 		auto start = std::chrono::high_resolution_clock::now();
-		auto result = qap.get_solution(exec, lower, upper, concurrent);
+		auto result = qap.get_solution(exec, lower, upper, concurrent, is_approximate);
 		auto end = std::chrono::high_resolution_clock::now();
 
 		std::cout << "Result = " << result.second << std::endl;

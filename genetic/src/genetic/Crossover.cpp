@@ -3,6 +3,13 @@
 namespace genetic {
 
 BaseCrossover::BaseCrossover() : population(nullptr), descendants(nullptr) {}
+BaseCrossover::BaseCrossover(const BaseCrossover& base) {
+	descendants = new std::vector<std::vector<std::size_t>>;
+	this->population = base.population;
+	this->start_idx = base.start_idx;
+	this->length = (*base.population)[0].size();
+	this->population = base.population;
+}
 
 void BaseCrossover::init(std::vector<std::vector<std::size_t>>* population, std::size_t start_idx) {
 	this->population = population;

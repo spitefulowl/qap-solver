@@ -44,9 +44,10 @@ std::vector<node_t*> base_executor::next_nodes(std::vector<permutation>* permuta
 	return result;
 }
 
-sequential_executor::sequential_executor(Matrix* data, Matrix* cost, base_bound* lower, base_bound* upper, bool concurrency) : base_executor(data, cost, lower, upper) {
+sequential_executor::sequential_executor(Matrix* data, Matrix* cost, base_bound* lower, base_bound* upper, bool concurrency, bool is_approximate) : base_executor(data, cost, lower, upper) {
 	this->concurrency = std::thread::hardware_concurrency();
 	enable_concurrency = concurrency;
+	this->is_approximate = is_approximate;
 }
 
 sequential_executor::~sequential_executor() {}
@@ -58,9 +59,14 @@ void sequential_executor::refresh_minimal_upper_bound() {
 		}
 		auto current_upper = upper_bound->get_bound(&my_graph->get_current_node()->get_value());
 		if (current_upper.second < minimal_upper_bound) {
+			if (current_upper.second < 30000) printf("Upper bound: %lu\n", current_upper.second);
 			minimal_upper_bound = current_upper.second;
+			delete better_permutation;
+			better_permutation = current_upper.first;
 		}
-		delete current_upper.first;
+		else {
+			delete current_upper.first;
+		}
 		my_graph->back();
 	}
 }
@@ -167,7 +173,7 @@ void sequential_executor::recursive_find()
 		auto upper = upper_bound->get_bound(&current);
 		std::size_t crit = calc->criterion(&current);
 		if (my_graph->count_of_nodes()) {
-			if (lower.second == upper.second) {
+			if (lower.second == upper.second && my_graph->get_current_node()->get_level() < size() - 3) {
 				printf("Find global on level = %u\n", my_graph->get_current_node()->get_level());
 				global_solution = true;
 				delete better_permutation;
@@ -199,10 +205,16 @@ void sequential_executor::recursive_find()
 
 	std::size_t levels_to_the_end = data_volume->size() - my_graph->get_current_node()->get_level();
 
-	if (enable_concurrency && levels_to_the_end < 9) {
+	if (enable_concurrency && levels_to_the_end < 9) { // < 9
 		multithreading_brute();
 		return;
 	}
+
+	if (is_approximate && my_graph->get_current_node()->get_level() >= 6/*size() / 2*/) {
+		my_graph->back();
+		return;
+	}
+
 
 	for (std::size_t idx = 0; idx < my_graph->count_of_nodes(); ++idx) {
 		if (global_solution) {

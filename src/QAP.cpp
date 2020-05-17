@@ -10,7 +10,7 @@ QAP::QAP(Matrix* data_volume, Matrix* transfer_cost) : data_volume(data_volume),
 
 QAP::~QAP() {}
 
-solution QAP::get_solution(executors exec, lower_bounds lower, upper_bounds upper, bool is_concurrent) {
+solution QAP::get_solution(executors exec, lower_bounds lower, upper_bounds upper, bool is_concurrent, bool is_approximate) {
 	if (data_volume->size() == transfer_cost->size()) {
 		base_executor* executor = nullptr;
 		base_bound* lower_bound = nullptr;
@@ -36,7 +36,7 @@ solution QAP::get_solution(executors exec, lower_bounds lower, upper_bounds uppe
 		switch (exec)
 		{
 		case seq_executor:
-			executor = new sequential_executor(data_volume, transfer_cost, lower_bound, upper_bound, is_concurrent);
+			executor = new sequential_executor(data_volume, transfer_cost, lower_bound, upper_bound, is_concurrent, is_approximate);
 			break;
 		}
 		solution result = executor->get_solution();

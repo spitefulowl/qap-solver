@@ -14,7 +14,7 @@ public:
 	QAP();
 	QAP(Matrix* data_volume, Matrix* transfer_cost);
 	~QAP();
-	solution get_solution(executors exec, lower_bounds lower, upper_bounds upper, bool is_concurrent);
+	solution get_solution(executors exec, lower_bounds lower, upper_bounds upper, bool is_concurrent, bool is_approximate);
 	void set_data_volume(Matrix* matrix);
 	void set_transfer_cost(Matrix* matrix);
 	

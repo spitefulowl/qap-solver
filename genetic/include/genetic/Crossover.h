@@ -8,6 +8,7 @@ namespace genetic {
 class BaseCrossover {
 public:
 	BaseCrossover();
+	BaseCrossover(const BaseCrossover&);
 	void init(std::vector<std::vector<std::size_t>>* population, std::size_t start_idx);
 	void exec();
 	std::vector<std::vector<std::size_t>>* get_descendants();
