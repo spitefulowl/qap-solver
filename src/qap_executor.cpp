@@ -59,7 +59,7 @@ void sequential_executor::refresh_minimal_upper_bound() {
 		}
 		auto current_upper = upper_bound->get_bound(&my_graph->get_current_node()->get_value());
 		if (current_upper.second < minimal_upper_bound) {
-			if (current_upper.second < 30000) printf("Upper bound: %lu\n", current_upper.second);
+			printf("Upper bound: %lu\n", current_upper.second);
 			minimal_upper_bound = current_upper.second;
 			delete better_permutation;
 			better_permutation = current_upper.first;
@@ -210,7 +210,7 @@ void sequential_executor::recursive_find()
 		return;
 	}
 
-	if (is_approximate && my_graph->get_current_node()->get_level() >= 6/*size() / 2*/) {
+	if (is_approximate && my_graph->get_current_node()->get_level() >= 4/*size() / 2*/) {
 		my_graph->back();
 		return;
 	}

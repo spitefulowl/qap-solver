@@ -24,7 +24,7 @@ protected:
 	permutation* better_permutation;
 	calculator* calc;
 	bool global_solution;
-	double minimal_upper_bound;
+	std::size_t minimal_upper_bound;
 private:
 	std::size_t my_size;
 };

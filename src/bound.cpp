@@ -35,19 +35,21 @@ std::pair<permutation*, std::size_t> random_upper_bound::get_bound(permutation* 
 	std::copy(items.begin(), items.end(), std::back_inserter(result));
 	std::random_shuffle(result.begin() + old_size, result.end(), random);
 	permutation* result_permutation = new permutation(result);
-	return std::make_pair(result_permutation, calc->criterion(result_permutation));
+	std::size_t criterion = calc->criterion(result_permutation);
+	return std::make_pair(result_permutation, criterion);
 }
 
 greedy_incorrect_lower_bound::greedy_incorrect_lower_bound(Matrix* data, Matrix* cost) : base_bound(data, cost) {
 	printf("greedy selected\n");
 	for (std::size_t row = 0; row < cost->size(); ++row) {
-		for (std::size_t column = 0; column < cost->size(); ++column) {
+		for (std::size_t column = row + 1; column < cost->size() - 1; ++column) {
 			if ((*cost)[row][column]) {
 				ordered_cost.push_back((*cost)[row][column]);
 			}
 		}
-		std::sort(ordered_cost.begin(), ordered_cost.end(), std::greater<std::size_t>{});
+		//std::sort(ordered_cost.begin(), ordered_cost.end(), std::greater<std::size_t>{});
 	}
+	std::sort(ordered_cost.begin(), ordered_cost.end());
 }
 
 std::pair<permutation*, std::size_t> greedy_incorrect_lower_bound::get_bound(permutation* base_permutation) {
@@ -74,7 +76,15 @@ std::pair<permutation*, std::size_t> greedy_incorrect_lower_bound::get_bound(per
 		}
 	}
 
-	std::sort(unfinished_data.begin(), unfinished_data.end());
+	//for (std::size_t idx = base_permutation->determined_size(); idx < base_permutation->size(); ++idx) {
+	//	for (std::size_t column = 0; column < data_volume->size(); ++column) {
+	//		if ((*data_volume)[idx][column]) {
+	//			unfinished_data.push_back((*data_volume)[idx][column]);
+	//		}
+	//	}
+	//}
+
+	std::sort(unfinished_data.begin(), unfinished_data.end(), std::greater<std::size_t>{});
 	std::size_t begin_idx = ordered_cost.size() - unfinished_data.size();
 
 	//std::vector<std::size_t> products;
@@ -82,7 +92,7 @@ std::pair<permutation*, std::size_t> greedy_incorrect_lower_bound::get_bound(per
 
 	for (std::size_t idx = 0; idx < unfinished_data.size(); ++idx) {
 		//products.push_back(unfinished_data[idx] * ordered_cost[begin_idx + idx]);
-		result_criterion += unfinished_data[idx] * ordered_cost[begin_idx + idx] * 2;
+		result_criterion += unfinished_data[idx] * ordered_cost[idx] * 2;
 	}
 	//std::sort(products.begin(), products.end());
 	//com_count /= 8;
@@ -92,6 +102,7 @@ std::pair<permutation*, std::size_t> greedy_incorrect_lower_bound::get_bound(per
 	//for (std::size_t idx = com_count; idx < products.size(); ++idx) {
 	//	result_criterion += products[idx];
 	//}
+
 	return std::pair<permutation*, std::size_t>(nullptr, result_criterion);
 }
 
