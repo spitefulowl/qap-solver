@@ -4,7 +4,7 @@ project(qap)
 if (MSVC)
     set(WARNING_FLAG /W4)
 else()
-    set(WARNING_FLAG -Wall -Wextra)
+    set(WARNING_FLAG "-Wall -Wextra")
 endif()
 
 if (MSVC)
