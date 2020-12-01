@@ -18,7 +18,6 @@ set(SOURCES src/genetic/GenAlg.cpp
 
 add_library(GeneticLib SHARED ${SOURCES})
 
-
 set_target_properties(GeneticLib PROPERTIES LINKER_LANGUAGE C)
 
 target_include_directories(GeneticLib
