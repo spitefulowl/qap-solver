@@ -1,7 +1,5 @@
 #include "genetic/GenAlg.h"
-#include <mutex>
-#include <thread>
-std::mutex mutex_gen;
+
 namespace genetic {
 
 GenAlg::GenAlg(BaseGeneration* generation, BaseCrossover* crossover, BaseMutation* mutation, BaseSelection* selection,
