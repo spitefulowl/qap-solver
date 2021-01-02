@@ -1,24 +1,18 @@
 #include "qap_executor.h"
 #include <thread>
-#include <mutex>
 
-std::mutex m;
-std::vector<permutation> shared;
+#define BRUTE_START_LEVEL 8
 
-using node_t = node<permutation>;
-
-base_executor::base_executor(Matrix* data, Matrix* cost, base_bound* lower, base_bound* upper) :
-		data_volume(data), transfer_cost(cost), 
-		lower_bound(lower), upper_bound(upper), better_permutation(nullptr), global_solution(false), minimal_upper_bound(-1.) {
-	calc = new calculator(data, cost); 
-	my_size = data->size();
-	my_graph = new graph<permutation>();
+base_executor::base_executor(matrix_t* data, matrix_t* cost, base_bound* lower, base_bound* upper) :
+		data_volume(*data), transfer_cost(*cost),
+		lower_bound(lower), upper_bound(upper) {
+	my_calculator = new utils::calculator(data, cost);
+	my_size = data->rows();
 }
 
 base_executor::~base_executor() {
-	if (calc) {
-		delete calc;
-		delete my_graph;
+	if (my_calculator) {
+		delete my_calculator;
 	}
 }
 
@@ -26,224 +20,151 @@ std::size_t base_executor::size() {
 	return my_size;
 }
 
-std::vector<permutation>* base_executor::next_permutations(permutation* base)
-{
-	std::list<std::size_t> unused = base->get_unused();
-	std::vector<permutation>* result = new std::vector<permutation>;
-	for (std::size_t& elem : unused) {
-		result->push_back(permutation(*base, elem));
-	}
-	return result;
-}
+sequential_executor::sequential_executor(matrix_t* data, matrix_t* cost, base_bound* lower,
+		base_bound* upper, bool concurrency, std::size_t approximate_level) : base_executor(data, cost, lower, upper) {
 
-std::vector<node_t*> base_executor::next_nodes(std::vector<permutation>* permutations) {
-	std::vector<node_t*> result;
-	for (permutation& elem : (*permutations)) {
-		result.push_back(my_graph->make_node(elem));
+	if (concurrency && approximate_level) {
+		throw std::runtime_error("incompatible parameters");
 	}
-	return result;
-}
-
-sequential_executor::sequential_executor(Matrix* data, Matrix* cost, base_bound* lower, base_bound* upper, bool concurrency) : base_executor(data, cost, lower, upper) {
 	this->concurrency = std::thread::hardware_concurrency();
+	threads_data.reserve(concurrency);
+	for (std::size_t idx = 0; idx < this->concurrency; ++idx) {
+		threads_data.emplace_back(permutation(this->size()));
+		threads_criterion.push_back(UINT32_MAX);
+	}
 	enable_concurrency = concurrency;
+	this->approximate_level = approximate_level;
 }
 
 sequential_executor::~sequential_executor() {}
 
-void sequential_executor::refresh_minimal_upper_bound() {
-	for (std::size_t idx = 0; idx < my_graph->count_of_nodes(); ++idx) {
-		if (!my_graph->try_select_next(idx)) {
-			continue;
-		}
-		auto current_upper = upper_bound->get_bound(&my_graph->get_current_node()->get_value());
-		if (current_upper.second < minimal_upper_bound) {
-			minimal_upper_bound = current_upper.second;
-		}
-		delete current_upper.first;
-		my_graph->back();
+bool sequential_executor::multithreading_start(const std::size_t& level) {
+	return (this->size() - level == BRUTE_START_LEVEL);
+}
+
+void sequential_executor::multithreading_brute(permutation& current_permutation, permutation& result_permutation, std::size_t& result_criterion, std::size_t& better_upper_bound) {
+	// prepare base permutations for each thread
+	std::set<std::size_t> unused_indexes = current_permutation.get_unused();
+	std::size_t current_size = current_permutation.determined_size();
+	std::size_t idx = 0;
+	for (auto unused_indexes_iterator = unused_indexes.begin(); unused_indexes_iterator != unused_indexes.end(); ++unused_indexes_iterator) {
+		std::size_t unused_index = *unused_indexes_iterator;
+		current_permutation.copy_to(threads_data[idx]);
+		threads_data[idx].set(current_size, unused_index);
+		++idx;
 	}
-}
 
-void sequential_executor::find_unpromising() {
-	node_t* my_position = my_graph->get_current_node();
-	permutation my_position_value = my_graph->get_current_node()->get_value();
-	std::size_t my_position_value_size = my_position_value.determined_size();
-	do {
-		for (std::size_t idx = 0; idx < my_graph->count_of_nodes(); ++idx) {
-			if (!my_graph->try_select_next(idx)) {
-				continue;
-			}
-			auto lower_b = lower_bound->get_bound(&my_graph->get_current_node()->get_value());
-			if (lower_b.second >= minimal_upper_bound) {
-				bool equal = true;
-				auto value = my_graph->get_current_node()->get_value();
-				std::size_t value_size = value.determined_size();
-				std::size_t distance = std::min(value_size, my_position_value_size);
-				for (std::size_t elem_idx = 0; elem_idx < distance; ++elem_idx) {
-					if (value[elem_idx] != my_position_value[elem_idx]) {
-						equal = false;
-						break;
-					}
-				}
-				if (!equal) {
-					my_graph->back();
-					my_graph->destroy_by_index(idx);
-					if (lower_b.first) {
-						delete lower_b.first;
-					}
-					continue;
-				}
-			}
-			if (lower_b.first) {
-				delete lower_b.first;
-			}
-			my_graph->back();
+	utils::calculator* calculator = my_calculator;
+	// task implementation
+	auto brute_task = [calculator](permutation& base_permutation, std::size_t& base_criterion) {
+		std::set<std::size_t> unused_indexes = base_permutation.get_unused();
+		permutation better_permutation(base_permutation.size());
+		std::size_t current_criterion = 0;
+		std::size_t base_size = base_permutation.determined_size();
+		std::size_t size = base_permutation.size();
+		std::size_t idx = 0;
+		for (auto unused_indexes_iterator = unused_indexes.begin(); unused_indexes_iterator != unused_indexes.end(); ++unused_indexes_iterator) {
+			std::size_t unused_index = *unused_indexes_iterator;
+			base_permutation.set(base_size + idx, unused_index);
+			++idx;
 		}
-	} while (my_graph->back());
-	my_graph->set_current_node(my_position);
-}
-
-void sequential_executor::multithreading_brute() {
-	shared.clear();
-	permutation base_brute_value = my_graph->get_current_node()->get_value();
-	std::vector<permutation>* next_p = next_permutations(&base_brute_value);
-	std::vector<std::thread> thread_pool;
-	calculator* tmp_calc = this->calc;
-	auto base_task = [tmp_calc](permutation& my_permutation) {
-		std::vector<std::size_t> per;
-		per.reserve(my_permutation.size());
-		for (std::size_t idx = 0; idx < my_permutation.determined_size(); ++idx) {
-			per.push_back(my_permutation[idx]);
-		}
-		std::list<std::size_t> unused = my_permutation.get_unused();
-		std::size_t per_size = per.size();
-		std::copy(unused.begin(), unused.end(), std::back_inserter(per));
-		std::sort(per.begin() + per_size, per.end());
-		permutation per_c = permutation(per);
-		double my_crit = tmp_calc->criterion(&per_c);
-		permutation internal_solution = per;
 		do {
-			per_c = permutation(per);
-			double tmp_crit = tmp_calc->criterion(&per_c);
-			if (tmp_crit < my_crit) {
-				my_crit = tmp_crit;
-				internal_solution = per;
+			current_criterion = calculator->criterion(base_permutation);
+			if (current_criterion < base_criterion) {
+				base_criterion = current_criterion;
+				base_permutation.copy_to(better_permutation);
 			}
-		} while (std::next_permutation(per.begin() + per_size, per.end()));
-		m.lock();
-		shared.push_back(permutation(internal_solution));
-		m.unlock();
+		} while(base_permutation.next_permutation(base_size, size));
+		better_permutation.copy_to(base_permutation);
 	};
-	for (auto iter = next_p->begin(); iter != next_p->end(); ++iter) {
-		thread_pool.emplace_back([&base_task, iter]() {
-			base_task(*iter);
-		});
+
+	// run tasks
+	std::vector<std::thread> thread_pool;
+	for (std::size_t thread_idx = 0; thread_idx < threads_data.size(); ++thread_idx) {
+		thread_pool.emplace_back(brute_task, std::ref(threads_data[thread_idx]), std::ref(threads_criterion[thread_idx]));
 	}
-	for (std::size_t idx = 0; idx < thread_pool.size(); ++idx) {
-		thread_pool[idx].join();
+	for (std::size_t thread_idx = 0; thread_idx < thread_pool.size(); ++thread_idx) {
+		thread_pool[thread_idx].join();
 	}
-	auto internal_better_it = std::min_element(shared.begin(), shared.end(), [tmp_calc](permutation& first, permutation& second) {
-		double first_estim = tmp_calc->criterion(&first);
-		double second_estim = tmp_calc->criterion(&second);
-		return first_estim < second_estim;
-	});
-	double current_better = calc->criterion(better_permutation);
-	double internal_better_estim = tmp_calc->criterion(&(*internal_better_it));
-	if (current_better > internal_better_estim) {
-		delete better_permutation;
-		better_permutation = new permutation(*internal_better_it);
-		minimal_upper_bound = internal_better_estim;
+
+	// analyze results
+	auto better_result = std::min_element(threads_criterion.begin(), threads_criterion.end());
+	std::size_t better_result_idx = better_result - threads_criterion.begin();
+	std::size_t better_result_criterion = *better_result;
+	if (better_result_criterion < result_criterion) {
+		result_criterion = better_result_criterion;
+		threads_data[better_result_idx].copy_to(result_permutation);
+		if (better_result_criterion < better_upper_bound) {
+			better_upper_bound = better_result_criterion;
+		}
 	}
-	my_graph->back();
-	delete next_p;
 }
 
-void sequential_executor::recursive_find()
-{
-	if (my_graph->get_current_node()->valid_node_value()) {
-		permutation current = my_graph->get_current_node()->get_value();
-		auto lower = lower_bound->get_bound(&current);
-		auto upper = upper_bound->get_bound(&current);
-		if (my_graph->count_of_nodes()) {
-			if (lower.second == upper.second) {
-				printf("Find global on level = %u\n", my_graph->get_current_node()->get_level());
-				global_solution = true;
-				delete better_permutation;
-				better_permutation = upper.first;
-				if (lower.first) {
-					delete lower.first;
-				}
-				return;
-			}
-		}
-		else {
-			double current_better = calc->criterion(better_permutation);
-			if (current_better > upper.second) {
-				delete better_permutation;
-				better_permutation = new permutation(current);
-			}
-			if (lower.first) {
-				delete lower.first;
-				lower.first = nullptr;
-			}
-		}
-		if (lower.first) {
-			delete lower.first;
-		}
-		delete upper.first;
-		refresh_minimal_upper_bound();
-		find_unpromising();
-	}
+#include <stdio.h>
 
-	std::size_t levels_to_the_end = data_volume->size() - my_graph->get_current_node()->get_level();
+void sequential_executor::recursive_find(permutation& current_permutation, permutation& result_permutation, std::size_t& result_criterion, permutation& bound_permutation, std::size_t level, std::size_t& better_upper_bound) {
+	std::set<std::size_t> unused_indexes = current_permutation.get_unused();
+	for (auto unused_indexes_iterator = unused_indexes.begin(); unused_indexes_iterator != unused_indexes.end(); ++unused_indexes_iterator) {
+		if (level == 0) printf("Return to level 0\n");
 
-	if (enable_concurrency && levels_to_the_end < 9) {
-		multithreading_brute();
-		return;
-	}
-
-	for (std::size_t idx = 0; idx < my_graph->count_of_nodes(); ++idx) {
-		if (global_solution) {
+		if (approximate_level > 0 && level == approximate_level) {
+			current_permutation.copy_to(bound_permutation);
+			std::size_t current_upper_bound = upper_bound->get_bound(bound_permutation);
+			if (result_criterion > current_upper_bound) {
+				result_criterion = current_upper_bound;
+				better_upper_bound = current_upper_bound;
+				bound_permutation.copy_to(result_permutation);
+			}
 			return;
 		}
-		if (!my_graph->try_select_next(idx)) {
+
+		if (enable_concurrency && multithreading_start(level)) {
+			multithreading_brute(current_permutation, result_permutation, result_criterion, better_upper_bound);
+			return;
+		}
+		if (level == current_permutation.size() - 1) {
+			std::size_t unused_index = *unused_indexes_iterator;
+			current_permutation.set(level, unused_index);
+			std::size_t current_criterion = my_calculator->criterion(current_permutation);
+			if (result_criterion > current_criterion) {
+				result_criterion = current_criterion;
+				current_permutation.copy_to(result_permutation);
+			}
+			current_permutation.make_last_unused();
+			return;
+		}
+		std::size_t unused_index = *unused_indexes_iterator;
+		current_permutation.set(level, unused_index);
+		current_permutation.copy_to(bound_permutation);
+		std::size_t current_upper_bound = upper_bound->get_bound(bound_permutation);
+		std::size_t current_lower_bound = lower_bound->get_bound(current_permutation);
+		if (current_lower_bound >= better_upper_bound) {
+			current_permutation.make_last_unused();
 			continue;
 		}
-		if (my_graph->get_current_node()->get_level() == 1) {
-			printf("On level 1\n");
+		if (current_upper_bound < better_upper_bound) {
+			better_upper_bound = current_upper_bound;
+			if (approximate_level) {
+				if (current_upper_bound < result_criterion) {
+					bound_permutation.copy_to(result_permutation);
+					result_criterion = current_upper_bound;
+				}
+			}
 		}
-		if (my_graph->get_current_node()->get_level() == 2) {
-			printf("On level 2\n");
-		}
-		auto next_p = this->next_permutations(&my_graph->get_current_node()->get_value());
-		auto next_n = this->next_nodes(next_p);
-		my_graph->set_next_nodes(next_n);
-		delete next_p;
-		recursive_find();
-		my_graph->destroy_by_index(idx);
+		recursive_find(current_permutation, result_permutation, result_criterion, bound_permutation, level + 1, better_upper_bound);
+		current_permutation.make_last_unused();
 	}
-	my_graph->back();
 }
 
 solution sequential_executor::get_solution() {
-	permutation* start_permutation = new permutation(this->size());
-	std::vector<permutation>* next_p = next_permutations(start_permutation);
-	std::vector<node_t*> next_nodes = this->next_nodes(next_p);
-	my_graph->set_next_nodes(next_nodes);
-	auto test_upper_bound = upper_bound->get_bound(&(*(next_nodes.begin()))->get_value());
-	minimal_upper_bound = test_upper_bound.second;
-	better_permutation = test_upper_bound.first;
-	delete next_p;
-	delete start_permutation;
-	next_p = nullptr;
+	permutation current_permutation(size());
+	permutation result_permutation(size());
+	permutation bound_permutation(size());
+	std::size_t better_upper_bound = upper_bound->get_bound(bound_permutation);
+	bound_permutation.copy_to(result_permutation);
+	std::size_t result_criterion = better_upper_bound;
+	std::size_t level = 0;
+	recursive_find(current_permutation, result_permutation, result_criterion, bound_permutation, level, better_upper_bound);
 
-	recursive_find();
-
-	auto result = std::make_pair(*better_permutation, calc->criterion(better_permutation));
-	delete better_permutation;
-
-	return result;
-
-	//return {*new permutation(this->size()), static_cast<double>(0)};
+	return std::make_pair(result_permutation, result_criterion);
 }
