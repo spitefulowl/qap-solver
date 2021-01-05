@@ -2,6 +2,13 @@
 #include <vector>
 #include <set>
 
+#ifdef USE_TBB
+#include <tbb/scalable_allocator.h>
+using allocator = tbb::scalable_allocator<std::size_t>;
+#else
+using allocator = std::allocator<std::size_t>;
+#endif
+
 class permutation {
 public:
 	permutation(std::size_t size);
@@ -20,7 +27,7 @@ public:
 	std::size_t size() const;
 
 private:
-	std::vector<std::size_t> my_permutation;
+	std::vector<std::size_t, allocator> my_permutation;
 	std::size_t my_determined_size;
 	std::size_t my_size;
 	std::set<std::size_t> my_unused_indexes;

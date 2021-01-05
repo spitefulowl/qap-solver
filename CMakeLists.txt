@@ -12,7 +12,7 @@ if (MSVC)
 endif ()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ${WARNING_FLAG}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 ${WARNING_FLAG}")
 
 if (UNIX)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
@@ -32,6 +32,14 @@ set(SRC_LIST
     src/main.cpp)
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
+
+if (TBB_DIR)
+    find_package(TBB)
+    target_link_libraries(${PROJECT_NAME} TBB::tbb)
+    target_link_libraries(${PROJECT_NAME} TBB::tbbmalloc)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_TBB")
+endif()
+
 find_package(Threads REQUIRED)
 
 target_include_directories(qap

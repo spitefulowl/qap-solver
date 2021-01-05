@@ -10,7 +10,7 @@ base_executor::base_executor(matrix_t* data, matrix_t* cost, base_bound* lower, 
 	my_size = data->rows();
 }
 
-base_executor::~base_executor() {
+base_executor::~base_executor() noexcept(false) {
 	if (my_calculator) {
 		delete my_calculator;
 	}
@@ -35,8 +35,6 @@ sequential_executor::sequential_executor(matrix_t* data, matrix_t* cost, base_bo
 	enable_concurrency = concurrency;
 	this->approximate_level = approximate_level;
 }
-
-sequential_executor::~sequential_executor() {}
 
 bool sequential_executor::multithreading_start(const std::size_t& level) {
 	return (this->size() - level == BRUTE_START_LEVEL);
@@ -168,3 +166,122 @@ solution sequential_executor::get_solution() {
 
 	return std::make_pair(result_permutation, result_criterion);
 }
+
+// parallel executor
+
+#ifdef USE_TBB
+
+parallel_executor::parallel_task::parallel_task(parallel_executor* executor, permutation start_permutation) {
+	my_permutation = new permutation(start_permutation.size());
+	start_permutation.copy_to(*my_permutation);
+	my_start_level = my_permutation->determined_size();
+	this->executor = executor;
+}
+
+parallel_executor::parallel_task::parallel_task(parallel_task&& m_task) {
+	this->my_permutation = m_task.my_permutation;
+	m_task.my_permutation = nullptr;
+	this->executor = m_task.executor;
+	this->my_start_level = m_task.my_start_level;
+	m_task.my_start_level = 0;
+}
+
+parallel_executor::parallel_task::~parallel_task() {
+	if (my_permutation) {
+		delete my_permutation;
+	}
+}
+
+void parallel_executor::parallel_task::recursive_find(permutation& result_permutation, std::size_t& result_criterion, permutation& bound_permutation, std::size_t level) const {
+	permutation& current_permutation = *my_permutation;
+	std::set<std::size_t> unused_indexes = current_permutation.get_unused();
+	for (auto unused_indexes_iterator = unused_indexes.begin(); unused_indexes_iterator != unused_indexes.end(); ++unused_indexes_iterator) {
+		if (level == current_permutation.size() - 1) {
+			std::size_t unused_index = *unused_indexes_iterator;
+			current_permutation.set(level, unused_index);
+			std::size_t current_criterion = executor->my_calculator->criterion(current_permutation);
+			if (result_criterion > current_criterion) {
+				result_criterion = current_criterion;
+				current_permutation.copy_to(result_permutation);
+			}
+			current_permutation.make_last_unused();
+			return;
+		}
+		std::size_t unused_index = *unused_indexes_iterator;
+		current_permutation.set(level, unused_index);
+		current_permutation.copy_to(bound_permutation);
+		std::size_t current_upper_bound = executor->upper_bound->get_bound(bound_permutation);
+		std::size_t current_lower_bound = executor->lower_bound->get_bound(current_permutation);
+		if (current_lower_bound >= executor->better_upper_bound.load(std::memory_order::memory_order_relaxed)) {
+			current_permutation.make_last_unused();
+			continue;
+		}
+		std::size_t old_bound = executor->better_upper_bound.load(std::memory_order_relaxed);
+		while (current_upper_bound < old_bound && !executor->better_upper_bound.compare_exchange_weak(old_bound, current_upper_bound)) {
+			old_bound = executor->better_upper_bound.load(std::memory_order_relaxed);
+		}
+		recursive_find(result_permutation, result_criterion, bound_permutation, level + 1);
+		current_permutation.make_last_unused();
+	}
+}
+
+void parallel_executor::parallel_task::operator()() const {
+	permutation result_permutation(executor->size());
+	permutation bound_permutation(executor->size());
+	std::size_t result_criterion = INT_MAX;
+	recursive_find(result_permutation, result_criterion, bound_permutation, my_start_level);
+	executor->tasks_solutions.push_back(std::make_pair(result_permutation, result_criterion));
+}
+
+parallel_executor::parallel_executor(matrix_t* data, matrix_t* cost, base_bound* lower, base_bound* upper,
+	std::size_t task_tree_height) : base_executor(data, cost, lower, upper) {
+
+	global_control = new tbb::global_control(tbb::global_control::max_allowed_parallelism, tbb::this_task_arena::max_concurrency());
+	this->task_tree_height = task_tree_height;
+}
+
+parallel_executor::~parallel_executor() {
+	delete global_control;
+}
+
+void parallel_executor::generate_tasks(permutation& current_permutation, permutation& bound_permutation, std::size_t level) {
+	std::set<std::size_t> unused_indexes = current_permutation.get_unused();
+	for (auto unused_indexes_iterator = unused_indexes.begin(); unused_indexes_iterator != unused_indexes.end(); ++unused_indexes_iterator) {
+		std::size_t unused_index = *unused_indexes_iterator;
+		current_permutation.set(level, unused_index);
+		current_permutation.copy_to(bound_permutation);
+		std::size_t current_upper_bound = upper_bound->get_bound(bound_permutation);
+		std::size_t current_lower_bound = lower_bound->get_bound(current_permutation);
+		if (current_lower_bound >= better_upper_bound.load(std::memory_order::memory_order_relaxed)) {
+			current_permutation.make_last_unused();
+			continue;
+		}
+		std::size_t old_bound = better_upper_bound.load(std::memory_order_relaxed);
+		while (current_upper_bound < old_bound && !better_upper_bound.compare_exchange_weak(old_bound, current_upper_bound)) {
+			old_bound = better_upper_bound.load(std::memory_order_relaxed);
+		}
+		if (level == task_tree_height) {
+			task_group.run(parallel_task(this, current_permutation));
+		}
+		else {
+			generate_tasks(current_permutation, bound_permutation, level + 1);
+		}
+		current_permutation.make_last_unused();
+	}
+}
+
+solution parallel_executor::get_solution() {
+	permutation current_permutation(size());
+	permutation bound_permutation(size());
+	better_upper_bound = upper_bound->get_bound(bound_permutation);
+	std::size_t level = 0;
+	generate_tasks(current_permutation, bound_permutation, level);
+	task_group.wait();
+
+	auto result_solution_iter = std::min_element(tasks_solutions.begin(), tasks_solutions.end(), [](auto& first, auto& second) {
+		return first.second < second.second;
+	});
+	return std::make_pair(result_solution_iter->first, result_solution_iter->second);
+}
+
+#endif

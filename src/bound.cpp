@@ -28,11 +28,10 @@ std::size_t degenerate_lower_bound::get_bound(permutation&) {
 
 // upper_bound section
 
-random_upper_bound::random_upper_bound(matrix_t* data, matrix_t* cost) : base_bound(data, cost) {
-	shuffled_values.resize(data_volume.rows());
-}
+random_upper_bound::random_upper_bound(matrix_t* data, matrix_t* cost) : base_bound(data, cost) { }
 
 std::size_t random_upper_bound::get_bound(permutation& base_permutation) {
+	std::vector<std::size_t, tbb::scalable_allocator<std::size_t>> shuffled_values(data_volume.rows());
 	if (base_permutation.size() == base_permutation.determined_size()) {
 		return my_calculator->criterion(base_permutation);
 	}
@@ -45,7 +44,10 @@ std::size_t random_upper_bound::get_bound(permutation& base_permutation) {
 	return my_calculator->criterion(base_permutation);
 }
 
-greedy_incorrect_lower_bound::greedy_incorrect_lower_bound(matrix_t* data, matrix_t* cost) : base_bound(data, cost) {
+greedy_incorrect_lower_bound::greedy_incorrect_lower_bound(matrix_t* data, matrix_t* cost) : base_bound(data, cost) { }
+
+std::size_t greedy_incorrect_lower_bound::get_bound(permutation& base_permutation) {
+	std::vector<std::size_t, tbb::scalable_allocator<std::size_t>> ordered_cost;
 	for (std::size_t row = 0; row < transfer_cost.rows(); ++row) {
 		for (std::size_t column = row + 1; column < transfer_cost.rows(); ++column) {
 			if (transfer_cost(row, column)) {
@@ -55,9 +57,8 @@ greedy_incorrect_lower_bound::greedy_incorrect_lower_bound(matrix_t* data, matri
 		//std::sort(ordered_cost.begin(), ordered_cost.end(), std::greater<std::size_t>{});
 	}
 	std::sort(ordered_cost.begin(), ordered_cost.end());
-}
 
-std::size_t greedy_incorrect_lower_bound::get_bound(permutation& base_permutation) {
+
 	if (base_permutation.size() == base_permutation.determined_size()) {
 		return my_calculator->criterion(base_permutation);
 	}

@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 		//utils::matrix_reader<std::size_t> handler_tasks("tasks.txt");
 		//utils::matrix_reader<std::size_t> handler_nodes("nodes.txt");
 
-		executors exec = seq_executor;
+		executors exec = par_executor;
 		lower_bounds lower = greedy_incorrect;
 		upper_bounds upper = random_bound;
 		bool concurrent = false;
@@ -65,6 +65,9 @@ int main(int argc, char* argv[])
 		//
 		if (!strcmp(argv[3], "seq")) {
 			exec = seq_executor;
+		}
+		if (!strcmp(argv[3], "par")) {
+			exec = par_executor;
 		}
 		//
 		if (!strcmp(argv[4], "deg")) {

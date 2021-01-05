@@ -5,7 +5,11 @@
 #include <vector>
 #include <utility>
 
-enum executors { seq_executor };
+enum executors { seq_executor
+	#ifdef USE_TBB
+	,par_executor
+	#endif
+};
 enum lower_bounds { degenerate, greedy_incorrect };
 enum upper_bounds { random_bound, genetic_bound, optimized_bound };
 
