@@ -39,8 +39,11 @@ solution qap::get_solution(executors exec, lower_bounds lower, upper_bounds uppe
 		case seq_executor:
 			executor = new sequential_executor(&data_volume, &transfer_cost, lower_bound, upper_bound, is_concurrent, approximate_level);
 			break;
+		#ifdef USE_TBB
 		case par_executor:
 			executor = new parallel_executor(&data_volume, &transfer_cost, lower_bound, upper_bound);
+			break;
+		#endif
 		}
 		solution result = executor->get_solution();
 		delete executor;
