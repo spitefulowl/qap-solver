@@ -75,7 +75,6 @@ private:
 
 	tbb::task_group task_group;
 	tbb::global_control* global_control;
-	permutation* my_permutation;
 
 	std::size_t task_tree_height;
 	std::atomic<std::size_t> better_upper_bound;
