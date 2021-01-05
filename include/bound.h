@@ -4,6 +4,13 @@
 #include "genetic/gen_alg.h"
 #include <utility>
 
+#ifdef USE_TBB
+#include <tbb/scalable_allocator.h>
+using allocator = tbb::scalable_allocator<std::size_t>;
+#else
+using allocator = std::allocator<std::size_t>;
+#endif
+
 class base_bound {
 public:
 	base_bound() = delete;
@@ -30,6 +37,8 @@ class greedy_incorrect_lower_bound : public base_bound {
 public:
 	greedy_incorrect_lower_bound(matrix_t* data, matrix_t* cost);
 	std::size_t get_bound(permutation& base_permutation) override;
+private:
+	std::vector<std::size_t, allocator> ordered_cost;
 };
 
 // upper_bound section

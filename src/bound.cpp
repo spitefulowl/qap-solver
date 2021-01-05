@@ -4,13 +4,6 @@
 #include <algorithm>
 #include <list>
 
-#ifdef USE_TBB
-#include <tbb/scalable_allocator.h>
-using allocator = tbb::scalable_allocator<std::size_t>;
-#else
-using allocator = std::allocator<std::size_t>;
-#endif
-
 base_bound::base_bound(matrix_t* data, matrix_t* cost) : data_volume(*data), transfer_cost(*cost) {
 	my_calculator = new utils::calculator(data, cost);
 	if (data) {
@@ -51,10 +44,7 @@ std::size_t random_upper_bound::get_bound(permutation& base_permutation) {
 	return my_calculator->criterion(base_permutation);
 }
 
-greedy_incorrect_lower_bound::greedy_incorrect_lower_bound(matrix_t* data, matrix_t* cost) : base_bound(data, cost) { }
-
-std::size_t greedy_incorrect_lower_bound::get_bound(permutation& base_permutation) {
-	std::vector<std::size_t, allocator> ordered_cost;
+greedy_incorrect_lower_bound::greedy_incorrect_lower_bound(matrix_t* data, matrix_t* cost) : base_bound(data, cost) {
 	for (std::size_t row = 0; row < transfer_cost.rows(); ++row) {
 		for (std::size_t column = row + 1; column < transfer_cost.rows(); ++column) {
 			if (transfer_cost(row, column)) {
@@ -64,8 +54,9 @@ std::size_t greedy_incorrect_lower_bound::get_bound(permutation& base_permutatio
 		//std::sort(ordered_cost.begin(), ordered_cost.end(), std::greater<std::size_t>{});
 	}
 	std::sort(ordered_cost.begin(), ordered_cost.end());
+}
 
-
+std::size_t greedy_incorrect_lower_bound::get_bound(permutation& base_permutation) {
 	if (base_permutation.size() == base_permutation.determined_size()) {
 		return my_calculator->criterion(base_permutation);
 	}
