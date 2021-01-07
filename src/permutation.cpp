@@ -1,5 +1,4 @@
 #include "permutation.h"
-#include <assert.h>
 #include <numeric>
 #include <algorithm>
 #include <stdexcept>
@@ -19,11 +18,6 @@ void permutation::copy_to(permutation& copy_to) {
 	}
 	copy_to.my_determined_size = this->my_determined_size;
 	copy_to.my_unused_indexes = this->my_unused_indexes;
-}
-
-std::size_t permutation::get(std::size_t idx) {
-	assert(idx < this->determined_size());
-	return my_permutation[idx];
 }
 
 void permutation::set(std::size_t idx, std::size_t value) {
@@ -81,12 +75,4 @@ bool permutation::next_permutation(std::size_t begin_pos, std::size_t end_pos) {
 	assert(my_determined_size == my_size);
 	assert(end_pos <= my_size);
 	return std::next_permutation(my_permutation.begin() + begin_pos, my_permutation.begin() + end_pos);
-}
-
-std::size_t permutation::determined_size() const {
-	return my_determined_size;
-}
-
-std::size_t permutation::size() const {
-	return my_size;
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <set>
+#include <assert.h>
 
 #ifdef USE_TBB
 #include <tbb/scalable_allocator.h>
@@ -15,7 +16,10 @@ class permutation {
 public:
 	permutation(std::size_t size);
 
-	std::size_t get(std::size_t idx);
+	std::size_t& get(std::size_t idx) {
+		assert(idx < this->determined_size());
+		return my_permutation[idx];
+	}
 	void set(std::size_t idx, std::size_t value);
 	void copy_to(permutation& copy_to);
 	void make_used(std::size_t value);
@@ -25,8 +29,12 @@ public:
 
 	set_t& get_unused();
 	bool next_permutation(std::size_t begin_pos, std::size_t end_pos);
-	std::size_t determined_size() const;
-	std::size_t size() const;
+	std::size_t determined_size() const {
+		return my_determined_size;
+	}
+	std::size_t size() const {
+		return my_size;
+	}
 
 private:
 	std::vector<std::size_t, allocator> my_permutation;

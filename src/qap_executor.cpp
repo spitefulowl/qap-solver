@@ -236,6 +236,7 @@ void parallel_executor::parallel_task::operator()() const {
 parallel_executor::parallel_executor(matrix_t* data, matrix_t* cost, base_bound* lower, base_bound* upper,
 	std::size_t task_tree_height) : base_executor(data, cost, lower, upper) {
 
+	global_control = new tbb::global_control(tbb::global_control::max_allowed_parallelism, tbb::this_task_arena::max_concurrency());
 	this->task_tree_height = task_tree_height;
 }
 
@@ -248,7 +249,6 @@ parallel_executor::~parallel_executor() {
 void parallel_executor::generate_tasks(permutation& current_permutation, permutation& bound_permutation, std::size_t level) {
 	set_t unused_indexes = current_permutation.get_unused();
 	for (auto unused_indexes_iterator = unused_indexes.begin(); unused_indexes_iterator != unused_indexes.end(); ++unused_indexes_iterator) {
-		if (level == 0) printf("Return to level 0\n");
 		std::size_t unused_index = *unused_indexes_iterator;
 		current_permutation.set(level, unused_index);
 		current_permutation.copy_to(bound_permutation);
@@ -277,15 +277,11 @@ solution parallel_executor::get_solution() {
 	permutation bound_permutation(size());
 	better_upper_bound = upper_bound->get_bound(bound_permutation);
 	std::size_t level = 0;
-	global_control = new tbb::global_control(tbb::global_control::max_allowed_parallelism, tbb::this_task_arena::max_concurrency());
 	generate_tasks(current_permutation, bound_permutation, level);
 	task_group.wait();
-
 	auto result_solution_iter = std::min_element(tasks_solutions.begin(), tasks_solutions.end(), [](auto& first, auto& second) {
 		return first.second < second.second;
 	});
-	delete global_control;
-	global_control = nullptr;
 	return std::make_pair(result_solution_iter->first, result_solution_iter->second);
 }
 

@@ -63,19 +63,20 @@ std::size_t greedy_incorrect_lower_bound::get_bound(permutation& base_permutatio
 	std::size_t result_criterion = my_calculator->criterion(base_permutation);
 
 	std::vector<std::size_t, allocator> unfinished_data;
+	unfinished_data.reserve(data_volume.rows() * data_volume.rows());
 
-	for (std::size_t idx = base_permutation.determined_size(); idx < base_permutation.size(); ++idx) {
-		for (std::size_t column = idx; column < data_volume.rows(); ++column) {
-			if (data_volume(idx, column)) {
-				unfinished_data.push_back(data_volume(idx, column));
+	for (std::size_t row = base_permutation.determined_size(); row < base_permutation.size(); ++row) {
+		for (std::size_t column = row; column < data_volume.rows(); ++column) {
+			if (data_volume(row, column)) {
+				unfinished_data.push_back(data_volume(row, column));
 			}
 		}
 	}
 
-	for (std::size_t idx = base_permutation.determined_size(); idx < base_permutation.size(); ++idx) {
+	for (std::size_t row = base_permutation.determined_size(); row < base_permutation.size(); ++row) {
 		for (std::size_t column = 0; column < base_permutation.determined_size(); ++column) {
-			if (data_volume(idx, column)) {
-				unfinished_data.push_back(data_volume(idx, column));
+			if (data_volume(row, column)) {
+				unfinished_data.push_back(data_volume(row, column));
 			}
 		}
 	}
