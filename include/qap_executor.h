@@ -9,7 +9,7 @@
 	#include <tbb/task_arena.h>
 #endif
 
-#define TREE_HEIGHT 4
+#define TREE_HEIGHT 2
 
 class base_executor {
 public:

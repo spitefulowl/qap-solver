@@ -73,7 +73,7 @@ void permutation::reverse(std::size_t begin, std::size_t end) {
 	std::reverse(my_permutation.begin() + begin, my_permutation.begin() + end);
 }
 
-std::set<std::size_t>& permutation::get_unused() {
+set_t& permutation::get_unused() {
 	return my_unused_indexes;
 }
 

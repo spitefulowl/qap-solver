@@ -9,6 +9,8 @@ using allocator = tbb::scalable_allocator<std::size_t>;
 using allocator = std::allocator<std::size_t>;
 #endif
 
+using set_t = std::set<std::size_t, std::less<std::size_t>, allocator>;
+
 class permutation {
 public:
 	permutation(std::size_t size);
@@ -21,7 +23,7 @@ public:
 	void swap(std::size_t left, std::size_t right);
 	void reverse(std::size_t begin, std::size_t end);
 
-	std::set<std::size_t>& get_unused();
+	set_t& get_unused();
 	bool next_permutation(std::size_t begin_pos, std::size_t end_pos);
 	std::size_t determined_size() const;
 	std::size_t size() const;
@@ -30,7 +32,7 @@ private:
 	std::vector<std::size_t, allocator> my_permutation;
 	std::size_t my_determined_size;
 	std::size_t my_size;
-	std::set<std::size_t> my_unused_indexes;
+	set_t my_unused_indexes;
 };
 
 using solution = std::pair<permutation, std::size_t>;

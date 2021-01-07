@@ -44,7 +44,7 @@ void ordinal_crossover::internal_generator(permutation& individ,
 		individ.set(idx, first_parent.get(idx));
 	}
 	std::size_t second_parent_idx = cut;
-	std::set<std::size_t>& unused_indexes = individ.get_unused();
+	auto& unused_indexes = individ.get_unused();
 	std::size_t second_parent_value = 0;
 	for (std::size_t idx = cut; idx < individ.size(); ++idx) {
 		second_parent_value = second_parent.get(second_parent_idx);

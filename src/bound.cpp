@@ -35,7 +35,7 @@ std::size_t random_upper_bound::get_bound(permutation& base_permutation) {
 	if (base_permutation.size() == base_permutation.determined_size()) {
 		return my_calculator->criterion(base_permutation);
 	}
-	const std::set<std::size_t>& unused_values = base_permutation.get_unused();
+	auto& unused_values = base_permutation.get_unused();
 	std::copy(unused_values.begin(), unused_values.end(), shuffled_values.begin());
 	std::random_shuffle(shuffled_values.begin(), shuffled_values.begin() + unused_values.size(), random);
 	for (std::size_t& value : shuffled_values) {
@@ -62,7 +62,7 @@ std::size_t greedy_incorrect_lower_bound::get_bound(permutation& base_permutatio
 	}
 	std::size_t result_criterion = my_calculator->criterion(base_permutation);
 
-	std::vector<std::size_t> unfinished_data;
+	std::vector<std::size_t, allocator> unfinished_data;
 
 	for (std::size_t idx = base_permutation.determined_size(); idx < base_permutation.size(); ++idx) {
 		for (std::size_t column = idx; column < data_volume.rows(); ++column) {

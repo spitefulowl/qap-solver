@@ -42,7 +42,7 @@ bool sequential_executor::multithreading_start(const std::size_t& level) {
 
 void sequential_executor::multithreading_brute(permutation& current_permutation, permutation& result_permutation, std::size_t& result_criterion, std::size_t& better_upper_bound) {
 	// prepare base permutations for each thread
-	std::set<std::size_t> unused_indexes = current_permutation.get_unused();
+	set_t unused_indexes = current_permutation.get_unused();
 	std::size_t current_size = current_permutation.determined_size();
 	std::size_t idx = 0;
 	for (auto unused_indexes_iterator = unused_indexes.begin(); unused_indexes_iterator != unused_indexes.end(); ++unused_indexes_iterator) {
@@ -55,7 +55,7 @@ void sequential_executor::multithreading_brute(permutation& current_permutation,
 	utils::calculator* calculator = my_calculator;
 	// task implementation
 	auto brute_task = [calculator](permutation& base_permutation, std::size_t& base_criterion) {
-		std::set<std::size_t> unused_indexes = base_permutation.get_unused();
+		set_t unused_indexes = base_permutation.get_unused();
 		permutation better_permutation(base_permutation.size());
 		std::size_t current_criterion = 0;
 		std::size_t base_size = base_permutation.determined_size();
@@ -101,7 +101,7 @@ void sequential_executor::multithreading_brute(permutation& current_permutation,
 #include <stdio.h>
 
 void sequential_executor::recursive_find(permutation& current_permutation, permutation& result_permutation, std::size_t& result_criterion, permutation& bound_permutation, std::size_t level, std::size_t& better_upper_bound) {
-	std::set<std::size_t> unused_indexes = current_permutation.get_unused();
+	set_t unused_indexes = current_permutation.get_unused();
 	for (auto unused_indexes_iterator = unused_indexes.begin(); unused_indexes_iterator != unused_indexes.end(); ++unused_indexes_iterator) {
 		if (level == 0) printf("Return to level 0\n");
 
@@ -194,7 +194,7 @@ parallel_executor::parallel_task::~parallel_task() {
 
 void parallel_executor::parallel_task::recursive_find(permutation& result_permutation, std::size_t& result_criterion, permutation& bound_permutation, std::size_t level) const {
 	permutation& current_permutation = *my_permutation;
-	std::set<std::size_t> unused_indexes = current_permutation.get_unused();
+	set_t unused_indexes = current_permutation.get_unused();
 	for (auto unused_indexes_iterator = unused_indexes.begin(); unused_indexes_iterator != unused_indexes.end(); ++unused_indexes_iterator) {
 		if (level == current_permutation.size() - 1) {
 			std::size_t unused_index = *unused_indexes_iterator;
@@ -236,17 +236,19 @@ void parallel_executor::parallel_task::operator()() const {
 parallel_executor::parallel_executor(matrix_t* data, matrix_t* cost, base_bound* lower, base_bound* upper,
 	std::size_t task_tree_height) : base_executor(data, cost, lower, upper) {
 
-	global_control = new tbb::global_control(tbb::global_control::max_allowed_parallelism, tbb::this_task_arena::max_concurrency());
 	this->task_tree_height = task_tree_height;
 }
 
 parallel_executor::~parallel_executor() {
-	delete global_control;
+	if (global_control) {
+		delete global_control;
+	}
 }
 
 void parallel_executor::generate_tasks(permutation& current_permutation, permutation& bound_permutation, std::size_t level) {
-	std::set<std::size_t> unused_indexes = current_permutation.get_unused();
+	set_t unused_indexes = current_permutation.get_unused();
 	for (auto unused_indexes_iterator = unused_indexes.begin(); unused_indexes_iterator != unused_indexes.end(); ++unused_indexes_iterator) {
+		if (level == 0) printf("Return to level 0\n");
 		std::size_t unused_index = *unused_indexes_iterator;
 		current_permutation.set(level, unused_index);
 		current_permutation.copy_to(bound_permutation);
@@ -275,12 +277,15 @@ solution parallel_executor::get_solution() {
 	permutation bound_permutation(size());
 	better_upper_bound = upper_bound->get_bound(bound_permutation);
 	std::size_t level = 0;
+	global_control = new tbb::global_control(tbb::global_control::max_allowed_parallelism, tbb::this_task_arena::max_concurrency());
 	generate_tasks(current_permutation, bound_permutation, level);
 	task_group.wait();
 
 	auto result_solution_iter = std::min_element(tasks_solutions.begin(), tasks_solutions.end(), [](auto& first, auto& second) {
 		return first.second < second.second;
 	});
+	delete global_control;
+	global_control = nullptr;
 	return std::make_pair(result_solution_iter->first, result_solution_iter->second);
 }
 
