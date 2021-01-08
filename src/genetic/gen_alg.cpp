@@ -3,7 +3,7 @@
 namespace genetic {
 
 gen_alg::gen_alg(base_generation* generation, base_crossover* crossover, base_mutation* mutation, base_selection* selection,
-	matrix_t* data_volume, matrix_t* transfer_cost,
+	utils::matrix_t* data_volume, utils::matrix_t* transfer_cost,
 	std::size_t iterations, std::size_t population_size, std::size_t probability, std::size_t beta) :
 		generation(generation), crossover(crossover), mutation(mutation), selection(selection),
 		data_volume(*data_volume), transfer_cost(*transfer_cost), iterations(iterations), population_size(population_size) , probability(probability), beta(beta) {}

@@ -3,7 +3,7 @@
 
 #define BRUTE_START_LEVEL 8
 
-base_executor::base_executor(matrix_t* data, matrix_t* cost, base_bound* lower, base_bound* upper) :
+base_executor::base_executor(utils::matrix_t* data, utils::matrix_t* cost, base_bound* lower, base_bound* upper) :
 		data_volume(*data), transfer_cost(*cost),
 		lower_bound(lower), upper_bound(upper) {
 	my_calculator = new utils::calculator(data, cost);
@@ -20,7 +20,7 @@ std::size_t base_executor::size() {
 	return my_size;
 }
 
-sequential_executor::sequential_executor(matrix_t* data, matrix_t* cost, base_bound* lower,
+sequential_executor::sequential_executor(utils::matrix_t* data, utils::matrix_t* cost, base_bound* lower,
 		base_bound* upper, bool concurrency, std::size_t approximate_level) : base_executor(data, cost, lower, upper) {
 
 	if (concurrency && approximate_level) {
@@ -233,7 +233,7 @@ void parallel_executor::parallel_task::operator()() const {
 	executor->tasks_solutions.push_back(std::make_pair(result_permutation, result_criterion));
 }
 
-parallel_executor::parallel_executor(matrix_t* data, matrix_t* cost, base_bound* lower, base_bound* upper,
+parallel_executor::parallel_executor(utils::matrix_t* data, utils::matrix_t* cost, base_bound* lower, base_bound* upper,
 	std::size_t task_tree_height) : base_executor(data, cost, lower, upper) {
 
 	global_control = new tbb::global_control(tbb::global_control::max_allowed_parallelism, tbb::this_task_arena::max_concurrency());

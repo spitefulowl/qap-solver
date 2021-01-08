@@ -1,7 +1,6 @@
 #pragma once
-#include "permutation.h"
+#include "utils.h"
 #include "bound.h"
-#include "helpers.h"
 
 #ifdef USE_TBB
 	#include <tbb/global_control.h>
@@ -14,7 +13,7 @@
 class base_executor {
 public:
 	base_executor() = delete;
-	base_executor(matrix_t* data, matrix_t* cost, base_bound* lower, base_bound* upper); // TODO: check size equivalence
+	base_executor(utils::matrix_t* data, utils::matrix_t* cost, base_bound* lower, base_bound* upper); // TODO: check size equivalence
 	base_executor& operator=(const base_executor&) = delete;
 	virtual ~base_executor() noexcept(false);
 	virtual solution get_solution() = 0;
@@ -22,8 +21,8 @@ protected:
 	std::size_t size();
 	base_bound* lower_bound;
 	base_bound* upper_bound;
-	matrix_t& data_volume;
-	matrix_t& transfer_cost;
+	utils::matrix_t& data_volume;
+	utils::matrix_t& transfer_cost;
 	utils::calculator* my_calculator;
 private:
 	std::size_t my_size;
@@ -31,7 +30,7 @@ private:
 
 class sequential_executor : public base_executor {
 public:
-	sequential_executor(matrix_t* data, matrix_t* cost, base_bound* lower, base_bound* upper, bool concurrency = false, std::size_t approximate_level = 0);
+	sequential_executor(utils::matrix_t* data, utils::matrix_t* cost, base_bound* lower, base_bound* upper, bool concurrency = false, std::size_t approximate_level = 0);
 	~sequential_executor() override = default;
 	solution get_solution() override;
 private:
@@ -53,7 +52,7 @@ private:
 
 class parallel_executor : public base_executor {
 public:
-	parallel_executor(matrix_t* data, matrix_t* cost, base_bound* lower, base_bound* upper, std::size_t task_tree_height = TREE_HEIGHT);
+	parallel_executor(utils::matrix_t* data, utils::matrix_t* cost, base_bound* lower, base_bound* upper, std::size_t task_tree_height = TREE_HEIGHT);
 	~parallel_executor() override;
 	solution get_solution() override;
 private:

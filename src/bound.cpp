@@ -1,10 +1,10 @@
 #include "bound.h"
-#include "helpers.h"
+#include "utils.h"
 #include <numeric>
 #include <algorithm>
 #include <list>
 
-base_bound::base_bound(matrix_t* data, matrix_t* cost) : data_volume(*data), transfer_cost(*cost) {
+base_bound::base_bound(utils::matrix_t* data, utils::matrix_t* cost) : data_volume(*data), transfer_cost(*cost) {
 	my_calculator = new utils::calculator(data, cost);
 	if (data) {
 		permutation_size = data->rows();
@@ -20,7 +20,7 @@ base_bound::~base_bound() {
 
 // lower_bound section
 
-degenerate_lower_bound::degenerate_lower_bound(matrix_t* data, matrix_t* cost) : base_bound(data, cost) {}
+degenerate_lower_bound::degenerate_lower_bound(utils::matrix_t* data, utils::matrix_t* cost) : base_bound(data, cost) {}
 
 std::size_t degenerate_lower_bound::get_bound(permutation&) {
 	return static_cast<std::size_t>(1);
@@ -28,7 +28,7 @@ std::size_t degenerate_lower_bound::get_bound(permutation&) {
 
 // upper_bound section
 
-random_upper_bound::random_upper_bound(matrix_t* data, matrix_t* cost) : base_bound(data, cost) { }
+random_upper_bound::random_upper_bound(utils::matrix_t* data, utils::matrix_t* cost) : base_bound(data, cost) { }
 
 std::size_t random_upper_bound::get_bound(permutation& base_permutation) {
 	std::vector<std::size_t, allocator> shuffled_values(data_volume.rows());
@@ -44,7 +44,7 @@ std::size_t random_upper_bound::get_bound(permutation& base_permutation) {
 	return my_calculator->criterion(base_permutation);
 }
 
-greedy_incorrect_lower_bound::greedy_incorrect_lower_bound(matrix_t* data, matrix_t* cost) : base_bound(data, cost) {
+greedy_incorrect_lower_bound::greedy_incorrect_lower_bound(utils::matrix_t* data, utils::matrix_t* cost) : base_bound(data, cost) {
 	for (std::size_t row = 0; row < transfer_cost.rows(); ++row) {
 		for (std::size_t column = row + 1; column < transfer_cost.rows(); ++column) {
 			if (transfer_cost(row, column)) {
@@ -90,7 +90,7 @@ std::size_t greedy_incorrect_lower_bound::get_bound(permutation& base_permutatio
 	return result_criterion - 1;
 }
 
-genetic_upper_bound::genetic_upper_bound(matrix_t* data, matrix_t* cost) : base_bound(data, cost) {
+genetic_upper_bound::genetic_upper_bound(utils::matrix_t* data, utils::matrix_t* cost) : base_bound(data, cost) {
 	//std::size_t probability = 71;
 	//std::size_t beta = 7;
 	//std::size_t iterations = 10;

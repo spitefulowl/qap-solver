@@ -1,8 +1,5 @@
-#include "permutation.h"
 #include "utils.h"
-#include "helpers.h"
 #include <stdexcept>
-
 
 namespace utils {
 
@@ -16,8 +13,8 @@ randomizer::~randomizer() {}
 std::size_t randomizer::operator()(std::size_t max, std::size_t min) {
 	assert(max >= min);
 	if (max == min) return min;
-	return min + range(generator) % (max - min);
-	// return min + UINT32_MAX % (max - min);
+	// return min + range(generator) % (max - min);
+	return min + UINT32_MAX % (max - min);
 }
 
 calculator::calculator(matrix<std::size_t>* data, matrix<std::size_t>* cost) : data_volume(*data), transfer_cost(*cost) {}

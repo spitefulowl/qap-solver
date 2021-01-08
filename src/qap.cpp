@@ -3,7 +3,7 @@
 #include "bound.h"
 #include <stdexcept>
 
-qap::qap(matrix_t* data_volume, matrix_t* transfer_cost) : data_volume(*data_volume), transfer_cost(*transfer_cost) {}
+qap::qap(utils::matrix_t* data_volume, utils::matrix_t* transfer_cost) : data_volume(*data_volume), transfer_cost(*transfer_cost) {}
 
 qap::~qap() {}
 

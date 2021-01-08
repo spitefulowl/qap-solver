@@ -6,7 +6,7 @@ namespace genetic {
 
 base_selection::base_selection() : my_data_volume(nullptr), my_transfer_cost(nullptr), my_population(nullptr), my_descendants(nullptr), my_calculator(nullptr), my_beta(0) { }
 
-void base_selection::init(matrix_t* data_volume, matrix_t* transfer_cost,
+void base_selection::init(utils::matrix_t* data_volume, utils::matrix_t* transfer_cost,
 		std::vector<permutation>& population, std::vector<permutation>& descendants, std::size_t beta) {
 	if (data_volume != my_data_volume || transfer_cost != my_transfer_cost) {
 		this->my_calculator = new utils::calculator(data_volume, transfer_cost);
@@ -25,7 +25,7 @@ void base_selection::exec() {
 	internal_selection(descendants_count);
 }
 
-void beta_tournament::init(matrix_t* data_volume, matrix_t* transfer_cost,
+void beta_tournament::init(utils::matrix_t* data_volume, utils::matrix_t* transfer_cost,
 		std::vector<permutation>& population, std::vector<permutation>& descendants, std::size_t beta) {
 	base_selection::init(data_volume, transfer_cost, population, descendants, beta);
 	beta_tournament_indexes.resize(beta);

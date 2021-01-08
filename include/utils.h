@@ -7,6 +7,7 @@
 #include <random>
 #include <sstream>
 #include <type_traits>
+#include <assert.h>
 
 #include "permutation.h"
 
@@ -31,16 +32,16 @@ private:
 	std::vector<T> my_data;
 };
 
-using matrix_t = matrix<std::size_t>;
+using matrix_t = utils::matrix<std::size_t>;
 
 struct calculator {
 public:
-	calculator(matrix_t* data, matrix_t* cost);
+	calculator(utils::matrix_t* data, utils::matrix_t* cost);
 	std::size_t criterion(permutation& permutation);
 	~calculator();
 private:
-	matrix_t& data_volume; // обмен данными между подзадачами
-	matrix_t& transfer_cost; // стоимость обмена данными между вычислителями
+	utils::matrix_t& data_volume; // обмен данными между подзадачами
+	utils::matrix_t& transfer_cost; // стоимость обмена данными между вычислителями
 };
 
 struct randomizer {

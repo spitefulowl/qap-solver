@@ -3,7 +3,7 @@
 #include <set>
 #include <assert.h>
 
-#ifdef USE_TBB
+#if USE_TBB && (_WIN32 || _WIN64)
 #include <tbb/scalable_allocator.h>
 using allocator = tbb::scalable_allocator<std::size_t>;
 #else
