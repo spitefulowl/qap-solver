@@ -57,6 +57,16 @@ void permutation::reverse(std::size_t begin, std::size_t end) {
 	std::reverse(my_permutation.begin() + begin, my_permutation.begin() + end);
 }
 
+set_t permutation::get_set_unused() { // TODO: delete
+	set_t result;
+	for (std::size_t value = 0; value < size(); ++value) {
+		if (my_unused_indexes & 1uLL << (value + 1)) {
+			result.insert(value);
+		}
+	}
+	return result;
+}
+
 bool permutation::next_permutation(std::size_t begin_pos, std::size_t end_pos) {
 	assert(my_determined_size == my_size);
 	assert(end_pos <= my_size);

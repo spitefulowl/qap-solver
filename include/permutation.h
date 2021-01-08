@@ -27,21 +27,10 @@ public:
 	void make_last_unused();
 	void swap(std::size_t left, std::size_t right);
 	void reverse(std::size_t begin, std::size_t end);
-
 	mask_t get_unused() {
 		return my_unused_indexes;
 	}
-
-	set_t get_set_unused() { // TODO: delete
-		set_t result;
-		for (std::size_t value = 0; value < size(); ++value) {
-			if (my_unused_indexes & 1uLL << (value + 1)) {
-				result.insert(value);
-			}
-		}
-		return result;
-	}
-
+	set_t get_set_unused();
 	bool next_permutation(std::size_t begin_pos, std::size_t end_pos);
 	std::size_t determined_size() const {
 		return my_determined_size;
