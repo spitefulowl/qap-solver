@@ -41,7 +41,7 @@ void sequential_executor::multithreading_brute(permutation& current_permutation,
 	auto unused_values_mask = current_permutation.get_unused();
 	std::size_t current_size = current_permutation.determined_size();
 	std::size_t idx = 0;
-	for (auto unused_value = 0; unused_value < size(); ++unused_value) {
+	for (std::size_t unused_value = 0; unused_value < size(); ++unused_value) {
 		if (unused_values_mask & 1LL << (unused_value + 1)) {
 			current_permutation.copy_to(threads_data[idx]);
 			threads_data[idx].set(current_size, unused_value);
@@ -58,7 +58,7 @@ void sequential_executor::multithreading_brute(permutation& current_permutation,
 		std::size_t base_size = base_permutation.determined_size();
 		std::size_t size = base_permutation.size();
 		std::size_t idx = 0;
-		for (auto unused_value = 0; unused_value < size; ++unused_value) {
+		for (std::size_t unused_value = 0; unused_value < size; ++unused_value) {
 			if (unused_values_mask & 1LL << (unused_value + 1)) {
 				base_permutation.set(base_size + idx, unused_value);
 				++idx;
@@ -100,7 +100,7 @@ void sequential_executor::multithreading_brute(permutation& current_permutation,
 
 void sequential_executor::recursive_find(permutation& current_permutation, permutation& result_permutation, std::size_t& result_criterion, permutation& bound_permutation, std::size_t level, std::size_t& better_upper_bound) {
 	auto unused_values_mask = current_permutation.get_unused();
-	for (auto unused_value = 0; unused_value < size(); ++unused_value) {
+	for (std::size_t unused_value = 0; unused_value < size(); ++unused_value) {
 		if (unused_values_mask & 1LL << (unused_value + 1)) {
 			if (level == 0) printf("Return to level 0\n");
 			if (approximate_level > 0 && level == approximate_level) {
@@ -192,7 +192,7 @@ parallel_executor::parallel_task::~parallel_task() {
 void parallel_executor::parallel_task::recursive_find(permutation& result_permutation, std::size_t& result_criterion, permutation& bound_permutation, std::size_t level) const {
 	permutation& current_permutation = *my_permutation;
 	auto unused_values_mask = current_permutation.get_unused();
-	for (auto unused_value = 0; unused_value < my_permutation->size(); ++unused_value) {
+	for (std::size_t unused_value = 0; unused_value < my_permutation->size(); ++unused_value) {
 		if (unused_values_mask & 1LL << (unused_value + 1)) {
 			if (level == current_permutation.size() - 1) {
 				current_permutation.set(level, unused_value);
@@ -245,7 +245,7 @@ parallel_executor::~parallel_executor() {
 
 void parallel_executor::generate_tasks(permutation& current_permutation, permutation& bound_permutation, std::size_t level) {
 	auto unused_values_mask = current_permutation.get_unused();
-	for (auto unused_value = 0; unused_value < size(); ++unused_value) {
+	for (std::size_t unused_value = 0; unused_value < size(); ++unused_value) {
 		if (unused_values_mask & 1LL << (unused_value + 1)) {
 			current_permutation.set(level, unused_value);
 			current_permutation.copy_to(bound_permutation);
