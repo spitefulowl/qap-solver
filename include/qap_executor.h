@@ -18,7 +18,9 @@ public:
 	virtual ~base_executor() noexcept(false);
 	virtual solution get_solution() = 0;
 protected:
-	std::size_t size();
+	std::size_t size() {
+		return my_size;
+	}
 	base_bound* lower_bound;
 	base_bound* upper_bound;
 	utils::matrix_t& data_volume;

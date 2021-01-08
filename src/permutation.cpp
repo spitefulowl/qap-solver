@@ -7,9 +7,7 @@ permutation::permutation(std::size_t size) {
 	my_size = size;
 	my_determined_size = 0;
 	my_permutation.resize(size);
-	for (std::size_t idx = 0; idx < size; ++idx) {
-		my_unused_indexes.insert(idx);
-	}
+	my_unused_indexes = (mask_t)-1;
 }
 
 void permutation::copy_to(permutation& copy_to) {
@@ -21,35 +19,27 @@ void permutation::copy_to(permutation& copy_to) {
 }
 
 void permutation::set(std::size_t idx, std::size_t value) {
-	bool insert_flag = true;
+	bool return_flag = true;
 	if (idx == my_determined_size) {
-		insert_flag = false;
+		return_flag = false;
 		my_determined_size++;
 	}
-	if (my_determined_size > my_size) {
-		my_determined_size--;
-		throw std::runtime_error("Out of range");
-	}
-	if (idx < my_determined_size) {
-		if (insert_flag) my_unused_indexes.insert(my_permutation[idx]);
-		my_unused_indexes.erase(value);
-		my_permutation[idx] = value;
-	}
-	else {
-		throw std::runtime_error("Out of range");
-	}
+	assert(my_determined_size <= my_size);
+	assert(idx < my_determined_size);
+	if (return_flag) flip_mask_bit(my_permutation[idx]); // my_unused_indexes.insert(my_permutation[idx]);
+	flip_mask_bit(value);
+	my_permutation[idx] = value;
 }
 
 void permutation::make_used(std::size_t value) {
-	if (my_determined_size < my_size) {
-		my_permutation[my_determined_size++] = value;
-		my_unused_indexes.erase(value);
-	}
+	assert(my_determined_size < my_size);
+	my_permutation[my_determined_size++] = value;
+	flip_mask_bit(value);
 }
 
 void permutation::make_last_unused() {
 	if (my_determined_size > 0) {
-		my_unused_indexes.insert(my_permutation[my_determined_size - 1]);
+		flip_mask_bit(my_permutation[my_determined_size - 1]);
 		my_determined_size--;
 	}
 }
@@ -65,10 +55,6 @@ void permutation::reverse(std::size_t begin, std::size_t end) {
 	assert(end <= my_determined_size);
 	assert(begin <= end);
 	std::reverse(my_permutation.begin() + begin, my_permutation.begin() + end);
-}
-
-set_t& permutation::get_unused() {
-	return my_unused_indexes;
 }
 
 bool permutation::next_permutation(std::size_t begin_pos, std::size_t end_pos) {

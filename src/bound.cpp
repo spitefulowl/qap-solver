@@ -31,13 +31,18 @@ std::size_t degenerate_lower_bound::get_bound(permutation&) {
 random_upper_bound::random_upper_bound(utils::matrix_t* data, utils::matrix_t* cost) : base_bound(data, cost) { }
 
 std::size_t random_upper_bound::get_bound(permutation& base_permutation) {
-	std::vector<std::size_t, allocator> shuffled_values(data_volume.rows());
+	std::vector<std::size_t, allocator> shuffled_values;
+	shuffled_values.reserve(data_volume.rows());
 	if (base_permutation.size() == base_permutation.determined_size()) {
 		return my_calculator->criterion(base_permutation);
 	}
-	auto& unused_values = base_permutation.get_unused();
-	std::copy(unused_values.begin(), unused_values.end(), shuffled_values.begin());
-	std::random_shuffle(shuffled_values.begin(), shuffled_values.begin() + unused_values.size(), random);
+	auto unused_values_mask = base_permutation.get_unused();
+	for (std::size_t value = 0; value < base_permutation.size(); ++value) {
+		if (unused_values_mask & 1uLL << (value + 1)) {
+			shuffled_values.push_back(value);
+		}
+	}
+	std::random_shuffle(shuffled_values.begin(), shuffled_values.end(), random);
 	for (std::size_t& value : shuffled_values) {
 		base_permutation.make_used(value);
 	}

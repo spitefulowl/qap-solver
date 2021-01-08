@@ -31,7 +31,7 @@ void random_generation::init(permutation& base_permutation, std::size_t populati
 }
 
 std::vector<permutation>& random_generation::exec() {
-	auto& unused_values = my_base_permutation->get_unused();
+	auto unused_values = my_base_permutation->get_set_unused();
 	std::copy(unused_values.begin(), unused_values.end(), shuffled_values.begin());
 	for (std::size_t idx = 0; idx < my_population_size; ++idx) {
 		std::random_shuffle(shuffled_values.begin(), shuffled_values.begin() + unused_values.size(), random);

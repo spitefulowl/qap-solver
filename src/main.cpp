@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 		executors exec = seq_executor;
 		lower_bounds lower = greedy_incorrect;
 		upper_bounds upper = random_bound;
-		bool concurrent = false;
+		bool concurrent = true;
 		//
 
 		auto matrix_tasks = handler_tasks.get_matrix();
