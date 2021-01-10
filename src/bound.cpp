@@ -31,7 +31,7 @@ std::size_t degenerate_lower_bound::get_bound(permutation&) {
 random_upper_bound::random_upper_bound(utils::matrix_t* data, utils::matrix_t* cost) : base_bound(data, cost) { }
 
 std::size_t random_upper_bound::get_bound(permutation& base_permutation) {
-	std::vector<std::size_t, allocator> shuffled_values;
+	std::vector<std::size_t, allocator<std::size_t>> shuffled_values;
 	shuffled_values.reserve(data_volume.rows());
 	if (base_permutation.size() == base_permutation.determined_size()) {
 		return my_calculator->criterion(base_permutation);
@@ -67,7 +67,7 @@ std::size_t greedy_incorrect_lower_bound::get_bound(permutation& base_permutatio
 	}
 	std::size_t result_criterion = my_calculator->criterion(base_permutation);
 
-	std::vector<std::size_t, allocator> unfinished_data;
+	std::vector<std::size_t, allocator<std::size_t>> unfinished_data;
 	unfinished_data.reserve(data_volume.rows() * data_volume.rows());
 
 	for (std::size_t row = base_permutation.determined_size(); row < base_permutation.size(); ++row) {

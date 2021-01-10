@@ -168,7 +168,7 @@ solution sequential_executor::get_solution() {
 
 #ifdef USE_TBB
 
-parallel_executor::parallel_task::parallel_task(parallel_executor* executor, permutation start_permutation) {
+parallel_executor::parallel_task::parallel_task(parallel_executor* executor, permutation& start_permutation) {
 	my_permutation = new permutation(start_permutation.size());
 	start_permutation.copy_to(*my_permutation);
 	my_start_level = my_permutation->determined_size();

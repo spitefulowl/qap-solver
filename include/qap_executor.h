@@ -62,7 +62,7 @@ private:
 
 	class parallel_task {
 	public:
-		parallel_task(parallel_executor* executor, permutation start_permutation);
+		parallel_task(parallel_executor* executor, permutation& start_permutation);
 		parallel_task(const parallel_task&) = delete;
 		parallel_task(parallel_task&&);
 		~parallel_task();

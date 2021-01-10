@@ -30,7 +30,7 @@ public:
 	greedy_incorrect_lower_bound(utils::matrix_t* data, utils::matrix_t* cost);
 	std::size_t get_bound(permutation& base_permutation) override;
 private:
-	std::vector<std::size_t, allocator> ordered_cost;
+	std::vector<std::size_t, allocator<std::size_t>> ordered_cost;
 };
 
 // upper_bound section

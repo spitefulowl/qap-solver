@@ -27,9 +27,9 @@ public:
 	std::size_t rows() { return my_rows; }
 	std::size_t columns() { return my_columns; }
 private:
-	std::size_t my_rows;
-	std::size_t my_columns;
-	std::vector<T> my_data;
+	alignas(alignment) std::size_t my_rows;
+	alignas(alignment) std::size_t my_columns;
+	std::vector<T, vector_allocator<T>> my_data;
 };
 
 using matrix_t = utils::matrix<std::size_t>;

@@ -1,16 +1,29 @@
 #pragma once
-#include <vector>
 #include <set>
+#include <vector>
 #include <assert.h>
+
+static constexpr std::size_t alignment = 128;
 
 #if USE_TBB && (_WIN32 || _WIN64)
 #include <tbb/scalable_allocator.h>
-using allocator = tbb::scalable_allocator<std::size_t>;
+template<typename T>
+using allocator = tbb::scalable_allocator<T>;
 #else
-using allocator = std::allocator<std::size_t>;
+template<typename T>
+using allocator = std::allocator<T>;
 #endif
 
-using set_t = std::set<std::size_t, std::less<std::size_t>, allocator>;
+#if USE_TBB
+#include <tbb/cache_aligned_allocator.h>
+template<typename T>
+using vector_allocator = tbb::cache_aligned_allocator<T>;
+#else
+template<typename T>
+using vector_allocator = allocator<T>;
+#endif
+
+using set_t = std::set<std::size_t, std::less<std::size_t>, allocator<std::size_t>>;
 using mask_t = unsigned long long;
 
 class permutation {
@@ -44,10 +57,10 @@ private:
 		my_unused_indexes ^= 1uLL << (pos + 1);
 	}
 
-	std::vector<std::size_t, allocator> my_permutation;
-	std::size_t my_determined_size;
-	std::size_t my_size;
-	mask_t my_unused_indexes;
+	std::vector<std::size_t, vector_allocator<std::size_t>> my_permutation;
+	alignas(alignment) std::size_t my_determined_size;
+	alignas(alignment) std::size_t my_size;
+	alignas(alignment) mask_t my_unused_indexes;
 };
 
 using solution = std::pair<permutation, std::size_t>;
