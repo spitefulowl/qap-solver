@@ -34,7 +34,7 @@ private:
 
 using matrix_t = utils::matrix<std::size_t>;
 
-struct calculator {
+struct alignas(alignment) calculator {
 public:
 	calculator(utils::matrix_t* data, utils::matrix_t* cost);
 	std::size_t criterion(permutation& permutation);

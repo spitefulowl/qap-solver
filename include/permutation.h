@@ -26,7 +26,7 @@ using vector_allocator = allocator<T>;
 using set_t = std::set<std::size_t, std::less<std::size_t>, allocator<std::size_t>>;
 using mask_t = unsigned long long;
 
-class permutation {
+class alignas(alignment) permutation {
 public:
 	permutation(std::size_t size);
 
@@ -57,7 +57,7 @@ private:
 		my_unused_indexes ^= 1uLL << (pos + 1);
 	}
 
-	std::vector<std::size_t, vector_allocator<std::size_t>> my_permutation;
+	alignas(alignment) std::vector<std::size_t, vector_allocator<std::size_t>> my_permutation;
 	alignas(alignment) std::size_t my_determined_size;
 	alignas(alignment) std::size_t my_size;
 	alignas(alignment) mask_t my_unused_indexes;
