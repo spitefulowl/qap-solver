@@ -14,7 +14,7 @@
 namespace utils {
 
 template<typename T>
-struct matrix {
+struct alignas(alignment) matrix {
 public:
 	matrix(std::size_t rows, std::size_t columns) :
 		my_rows(rows), my_columns(columns) {
@@ -29,7 +29,7 @@ public:
 private:
 	alignas(alignment) std::size_t my_rows;
 	alignas(alignment) std::size_t my_columns;
-	std::vector<T, vector_allocator<T>> my_data;
+	alignas(alignment) std::vector<T, vector_allocator<T>> my_data;
 };
 
 using matrix_t = utils::matrix<std::size_t>;
