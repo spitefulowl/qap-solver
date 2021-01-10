@@ -21,7 +21,7 @@ void base_selection::init(utils::matrix_t* data_volume, utils::matrix_t* transfe
 void base_selection::exec() {
 	std::size_t base_population_count = static_cast<std::size_t>(OVERLAP_COEF * (double)my_population->size());
 	std::size_t descendants_count = my_population->size() - base_population_count;
-	std::shuffle(my_population->begin(), my_population->end(), random_mt);
+	std::random_shuffle(my_population->begin(), my_population->end());
 	internal_selection(descendants_count);
 }
 

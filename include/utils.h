@@ -14,7 +14,7 @@
 namespace utils {
 
 template<typename T>
-struct alignas(qap_alignment) matrix {
+struct alignas(alignment) matrix {
 public:
 	matrix(std::size_t rows, std::size_t columns) :
 		my_rows(rows), my_columns(columns) {
@@ -27,14 +27,14 @@ public:
 	std::size_t rows() { return my_rows; }
 	std::size_t columns() { return my_columns; }
 private:
-	alignas(qap_alignment) std::size_t my_rows;
-	alignas(qap_alignment) std::size_t my_columns;
-	alignas(qap_alignment) std::vector<T, vector_allocator<T>> my_data;
+	alignas(alignment) std::size_t my_rows;
+	alignas(alignment) std::size_t my_columns;
+	alignas(alignment) std::vector<T, vector_allocator<T>> my_data;
 };
 
 using matrix_t = utils::matrix<std::size_t>;
 
-struct alignas(qap_alignment) calculator {
+struct alignas(alignment) calculator {
 public:
 	calculator(utils::matrix_t* data, utils::matrix_t* cost);
 	std::size_t criterion(permutation& permutation);

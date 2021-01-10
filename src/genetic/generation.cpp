@@ -2,7 +2,7 @@
 
 namespace genetic {
 
-base_generation::base_generation() : my_base_permutation(nullptr), my_population_size(0) { }
+base_generation::base_generation() : my_base_permutation(nullptr), my_population_size(0) {}
 
 void base_generation::init(permutation& base_permutation, std::size_t population_size) {
 	my_base_permutation = &base_permutation;
@@ -17,8 +17,6 @@ void base_generation::init(permutation& base_permutation, std::size_t population
 }
 
 void random_generation::init(permutation& base_permutation, std::size_t population_size) {
-	std::random_device rd;
-	random_mt = std::mt19937(rd());
 	std::size_t individ_size = base_permutation.size();
 	if (my_base_permutation != nullptr) {
 		std::size_t my_individ_size = my_base_permutation->size();
@@ -36,7 +34,7 @@ std::vector<permutation>& random_generation::exec() {
 	auto unused_values = my_base_permutation->get_set_unused();
 	std::copy(unused_values.begin(), unused_values.end(), shuffled_values.begin());
 	for (std::size_t idx = 0; idx < my_population_size; ++idx) {
-		std::shuffle(shuffled_values.begin(), shuffled_values.begin() + unused_values.size(), random_mt);
+		std::random_shuffle(shuffled_values.begin(), shuffled_values.begin() + unused_values.size(), random);
 		my_base_permutation->copy_to(my_population[idx]);
 		for (std::size_t& value : shuffled_values) {
 			my_population[idx].make_used(value);

@@ -40,7 +40,7 @@ void permutation::make_used(std::size_t value) {
 void permutation::make_last_unused() {
 	if (my_determined_size > 0) {
 		flip_mask_bit(my_permutation[my_determined_size - 1]);
-		--my_determined_size;
+		my_determined_size--;
 	}
 }
 
