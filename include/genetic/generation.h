@@ -22,6 +22,7 @@ public:
 private:
 	std::vector<std::size_t> shuffled_values;
 	utils::randomizer random;
+	std::mt19937 random_mt;
 };
 
 }

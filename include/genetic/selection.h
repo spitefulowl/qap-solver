@@ -17,6 +17,7 @@ protected:
 	utils::calculator* my_calculator;
 	std::size_t my_beta;
 	utils::randomizer random;
+	std::mt19937 random_mt;
 };
 
 class beta_tournament : public base_selection {

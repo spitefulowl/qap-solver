@@ -10,7 +10,7 @@ public:
 	virtual ~base_bound();
 	virtual std::size_t get_bound(permutation& base_permutation) = 0;
 protected:
-	utils::randomizer random;
+	std::mt19937 random;
 	utils::calculator* my_calculator;
 	std::size_t permutation_size;
 	utils::matrix_t& data_volume;

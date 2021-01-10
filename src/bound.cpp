@@ -5,6 +5,8 @@
 #include <list>
 
 base_bound::base_bound(utils::matrix_t* data, utils::matrix_t* cost) : data_volume(*data), transfer_cost(*cost) {
+	std::random_device rd;
+	random = std::mt19937(rd());
 	my_calculator = new utils::calculator(data, cost);
 	if (data) {
 		permutation_size = data->rows();
@@ -42,7 +44,7 @@ std::size_t random_upper_bound::get_bound(permutation& base_permutation) {
 			shuffled_values.push_back(value);
 		}
 	}
-	std::random_shuffle(shuffled_values.begin(), shuffled_values.end(), random);
+	std::shuffle(shuffled_values.begin(), shuffled_values.end(), random);
 	for (std::size_t& value : shuffled_values) {
 		base_permutation.make_used(value);
 	}
