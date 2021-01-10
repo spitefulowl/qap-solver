@@ -26,7 +26,6 @@ protected:
 	utils::matrix_t& data_volume;
 	utils::matrix_t& transfer_cost;
 	utils::calculator* my_calculator;
-private:
 	std::size_t my_size;
 };
 
