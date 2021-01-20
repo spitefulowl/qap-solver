@@ -194,6 +194,17 @@ void parallel_executor::parallel_task::recursive_find(permutation& result_permut
 	auto unused_values_mask = current_permutation.get_unused();
 	for (std::size_t unused_value = 0; unused_value < my_permutation->size(); ++unused_value) {
 		if (unused_values_mask & 1LL << (unused_value + 1)) {
+			if (executor->approximate_level > 0 && level == executor->approximate_level) {
+				current_permutation.copy_to(bound_permutation);
+				std::size_t current_upper_bound = executor->upper_bound->get_bound(bound_permutation);
+				std::size_t old_bound = executor->better_upper_bound.load(std::memory_order_relaxed);
+				if (old_bound > current_upper_bound) {
+					result_criterion = current_upper_bound;
+					while (current_upper_bound < old_bound && !executor->better_upper_bound.compare_exchange_weak(old_bound, current_upper_bound)) {}
+					if (current_upper_bound < old_bound) bound_permutation.copy_to(result_permutation);
+				}
+				return;
+			}
 			if (level == current_permutation.size() - 1) {
 				current_permutation.set(level, unused_value);
 				std::size_t current_criterion = executor->my_calculator->criterion(current_permutation);
@@ -213,9 +224,8 @@ void parallel_executor::parallel_task::recursive_find(permutation& result_permut
 				continue;
 			}
 			std::size_t old_bound = executor->better_upper_bound.load(std::memory_order_relaxed);
-			while (current_upper_bound < old_bound && !executor->better_upper_bound.compare_exchange_weak(old_bound, current_upper_bound)) {
-				old_bound = executor->better_upper_bound.load(std::memory_order_relaxed);
-			}
+			while (current_upper_bound < old_bound && !executor->better_upper_bound.compare_exchange_weak(old_bound, current_upper_bound)) {}
+
 			recursive_find(result_permutation, result_criterion, bound_permutation, level + 1);
 			current_permutation.make_last_unused();
 		}
@@ -231,8 +241,9 @@ void parallel_executor::parallel_task::operator()() const {
 }
 
 parallel_executor::parallel_executor(utils::matrix_t* data, utils::matrix_t* cost, base_bound* lower, base_bound* upper,
-	std::size_t task_tree_height) : base_executor(data, cost, lower, upper) {
+	std::size_t approximate_level, std::size_t task_tree_height) : base_executor(data, cost, lower, upper) {
 
+	this->approximate_level = approximate_level;
 	global_control = new tbb::global_control(tbb::global_control::max_allowed_parallelism, tbb::this_task_arena::max_concurrency());
 	this->task_tree_height = task_tree_height;
 }

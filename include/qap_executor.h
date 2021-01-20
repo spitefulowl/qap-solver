@@ -54,7 +54,7 @@ private:
 
 class parallel_executor : public base_executor {
 public:
-	parallel_executor(utils::matrix_t* data, utils::matrix_t* cost, base_bound* lower, base_bound* upper, std::size_t task_tree_height = TREE_HEIGHT);
+	parallel_executor(utils::matrix_t* data, utils::matrix_t* cost, base_bound* lower, base_bound* upper, std::size_t approximate_level = 0, std::size_t task_tree_height = TREE_HEIGHT);
 	~parallel_executor() override;
 	solution get_solution() override;
 private:
@@ -78,6 +78,7 @@ private:
 	tbb::global_control* global_control;
 
 	std::size_t task_tree_height;
+	std::size_t approximate_level;
 	std::atomic<std::size_t> better_upper_bound;
 	tbb::concurrent_vector<solution> tasks_solutions;
 };

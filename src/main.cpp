@@ -28,9 +28,9 @@ int main(int argc, char* argv[])
 		//utils::matrix_reader<std::size_t> handler_tasks("tasks.txt");
 		//utils::matrix_reader<std::size_t> handler_nodes("nodes.txt");
 
-		executors exec = seq_executor;
+		executors exec = par_executor;
 		lower_bounds lower = greedy_incorrect;
-		upper_bounds upper = random_bound;
+		upper_bounds upper = genetic_bound;
 		bool concurrent = true;
 		//
 
