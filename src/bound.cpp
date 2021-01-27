@@ -30,6 +30,8 @@ std::size_t degenerate_lower_bound::get_bound(permutation&) {
 
 random_upper_bound::random_upper_bound(utils::matrix_t* data, utils::matrix_t* cost) : base_bound(data, cost) { }
 
+random_upper_bound::~random_upper_bound() { }
+
 std::size_t random_upper_bound::get_bound(permutation& base_permutation) {
 	std::vector<std::size_t, allocator<std::size_t>> shuffled_values;
 	shuffled_values.reserve(data_volume.rows());

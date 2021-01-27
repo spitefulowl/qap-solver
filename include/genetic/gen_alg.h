@@ -18,6 +18,7 @@ public:
 private:
 	utils::matrix_t& data_volume;
 	utils::matrix_t& transfer_cost;
+	utils::calculator* my_calculator;
 	base_generation* generation;
 	base_crossover* crossover;
 	base_mutation* mutation;

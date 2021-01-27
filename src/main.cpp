@@ -28,10 +28,10 @@ int main(int argc, char* argv[])
 		//utils::matrix_reader<std::size_t> handler_tasks("tasks.txt");
 		//utils::matrix_reader<std::size_t> handler_nodes("nodes.txt");
 
-		executors exec = par_executor;
+		executors exec = seq_executor;
 		lower_bounds lower = greedy_incorrect;
 		upper_bounds upper = genetic_bound;
-		bool concurrent = true;
+		bool concurrent = false;
 		//
 
 		auto matrix_tasks = handler_tasks.get_matrix();

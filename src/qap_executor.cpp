@@ -225,6 +225,10 @@ void parallel_executor::parallel_task::recursive_find(permutation& result_permut
 			}
 			std::size_t old_bound = executor->better_upper_bound.load(std::memory_order_relaxed);
 			while (current_upper_bound < old_bound && !executor->better_upper_bound.compare_exchange_weak(old_bound, current_upper_bound)) {}
+			if (current_upper_bound < result_criterion) {
+				result_criterion = current_upper_bound;
+				bound_permutation.copy_to(result_permutation);
+			}
 
 			recursive_find(result_permutation, result_criterion, bound_permutation, level + 1);
 			current_permutation.make_last_unused();
@@ -267,9 +271,7 @@ void parallel_executor::generate_tasks(permutation& current_permutation, permuta
 				continue;
 			}
 			std::size_t old_bound = better_upper_bound.load(std::memory_order_relaxed);
-			while (current_upper_bound < old_bound && !better_upper_bound.compare_exchange_weak(old_bound, current_upper_bound)) {
-				old_bound = better_upper_bound.load(std::memory_order_relaxed);
-			}
+			while (current_upper_bound < old_bound && !better_upper_bound.compare_exchange_weak(old_bound, current_upper_bound)) { }
 			if (level == task_tree_height) {
 				task_group.run(parallel_task(this, current_permutation));
 			}

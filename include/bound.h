@@ -38,6 +38,7 @@ private:
 class random_upper_bound : public base_bound {
 public:
 	random_upper_bound(utils::matrix_t* data, utils::matrix_t* cost);
+	~random_upper_bound();
 	std::size_t get_bound(permutation& base_permutation) override;
 };
 

@@ -40,6 +40,7 @@ public:
 	std::size_t criterion(permutation& permutation);
 	~calculator();
 private:
+	static std::size_t min_value;
 	utils::matrix_t& data_volume; // обмен данными между подзадачами
 	utils::matrix_t& transfer_cost; // стоимость обмена данными между вычислителями
 };

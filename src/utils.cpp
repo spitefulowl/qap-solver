@@ -17,7 +17,9 @@ std::size_t randomizer::operator()(std::size_t max, std::size_t min) {
 	// return min + UINT32_MAX % (max - min);
 }
 
-calculator::calculator(matrix<std::size_t>* data, matrix<std::size_t>* cost) : data_volume(*data), transfer_cost(*cost) {}
+std::size_t calculator::min_value = UINT32_MAX;
+
+calculator::calculator(matrix<std::size_t>* data, matrix<std::size_t>* cost) : data_volume(*data), transfer_cost(*cost) { }
 
 std::size_t calculator::criterion(permutation& permutation) {
 	std::size_t result = 0;
@@ -27,10 +29,11 @@ std::size_t calculator::criterion(permutation& permutation) {
 			result += data_volume(row, column) * transfer_cost(permutation.get(row), permutation.get(column));
 		}
 	}
+	if (result * 2 < min_value && permutation.determined_size() == permutation.size()) { min_value = result * 2; }
 	return result * 2;
 }
 
-calculator::~calculator() { }
+calculator::~calculator() { std::printf("Min value: %lu\n", min_value); }
 
 
 } //namespace utils
